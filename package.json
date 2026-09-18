@@ -1,21 +1,28 @@
 {
-  "name": "minigame",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "cyber-nav",
+  "version": "2.0.0",
+  "description": "A high-tech cyberpunk personal navigation dashboard and tool hub",
+  "main": "dist/index.html",
   "scripts": {
-    "build": "echo 'No build needed'"
+    "start": "npx serve dist",
+    "build": "echo 'No build needed - pure static architecture'"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IE155/minigame.git"
+    "url": "git+https://github.com/qzzt9227/minigame.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "navigation",
+    "cyberpunk",
+    "dashboard",
+    "hub",
+    "bookmarks"
+  ],
+  "author": "qzzt9227",
   "license": "MIT",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/IE155/minigame/issues"
+    "url": "https://github.com/qzzt9227/minigame/issues"
   },
-  "homepage": "https://github.com/IE155/minigame#readme"
+  "homepage": "https://github.com/qzzt9227/minigame#readme"
 }
