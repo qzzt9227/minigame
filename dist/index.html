@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEXUS // 赛博个人导航中枢</title>
+    <title>个人导航</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -19,48 +19,48 @@
     <div class="drawer-backdrop" id="drawerBackdrop"></div>
 
     <div class="app-container">
-        <!-- ===== 顶部 HUD 状态栏 ===== -->
+        <!-- ===== 顶部状态栏 ===== -->
         <header class="hud-header">
             <div class="logo-block">
-                <div class="logo-symbol">NX</div>
+                <div class="logo-symbol">NAV</div>
                 <div class="logo-text">
                     <div class="brand-title">
-                        NEXUS // HUB
-                        <span class="brand-version">v2.0-STATION</span>
+                        个人导航
+                        <span class="brand-version">v2.0</span>
                     </div>
-                    <span class="brand-sub">PERSONAL NAVIGATION CONSOLE // 个人多功能导航中枢</span>
+                    <span class="brand-sub">日常工作与常用工具导航</span>
                 </div>
             </div>
 
             <div class="hud-telemetry">
                 <div class="telemetry-item">
-                    <span class="telemetry-label">SYSTEM CLOCK</span>
+                    <span class="telemetry-label">当前时间</span>
                     <span class="telemetry-value" id="hudTime">--:--:--</span>
                 </div>
                 <div class="telemetry-item">
-                    <span class="telemetry-label">CHRONO DATE</span>
+                    <span class="telemetry-label">日期</span>
                     <span class="telemetry-value" id="hudDate">----.--.--</span>
                 </div>
                 <div class="telemetry-item">
-                    <span class="telemetry-label">NETWORK NODE</span>
+                    <span class="telemetry-label">网络状态</span>
                     <span class="telemetry-value">
                         <span class="status-dot"></span>
-                        <span id="hudPing">12ms</span>
+                        <span id="hudPing">在线</span>
                     </span>
                 </div>
             </div>
 
             <div class="hud-actions">
-                <button class="cyber-btn" id="themeCycleBtn" title="切换高亮色阶">
-                    <span>🎨</span> <span>主题色阶</span>
+                <button class="cyber-btn" id="themeCycleBtn" title="切换主题色彩">
+                    <span>🎨</span> <span>主题</span>
                 </button>
                 <button class="cyber-btn" id="toggleScratchpadBtn" title="快捷键: Alt+S">
-                    <span>📝</span> <span>赛博便签</span>
+                    <span>📝</span> <span>便签</span>
                 </button>
                 <button class="cyber-btn primary" id="openAddModalBtn" title="快捷键: Alt+N">
                     <span>+</span> <span>新增网址</span>
                 </button>
-                <button class="cyber-btn icon-only" id="openDataBtn" title="数据备份与恢复">
+                <button class="cyber-btn icon-only" id="openDataBtn" title="数据备份与设置">
                     <span>⚙️</span>
                 </button>
                 <button class="cyber-btn icon-only" id="openShortcutsBtn" title="快捷键帮助 (?)">
@@ -69,7 +69,7 @@
             </div>
         </header>
 
-        <!-- ===== 核心搜索与过滤控制台 ===== -->
+        <!-- ===== 搜索与过滤控制台 ===== -->
         <section class="search-console">
             <div class="engine-selector" id="engineSelector">
                 <!-- 动态生成搜索引擎标签 -->
@@ -80,26 +80,26 @@
                     type="text" 
                     class="search-input" 
                     id="searchInput" 
-                    placeholder="输入关键词进行全网搜索，或实时过滤卡片..." 
+                    placeholder="输入关键词全网搜索，或直接筛选网址..." 
                     autocomplete="off" 
                     spellcheck="false"
                 >
                 <div class="search-tools">
                     <span class="search-shortcut-hint">Ctrl + K / /</span>
-                    <button class="search-submit-btn" id="searchSubmitBtn" type="button">SEARCH // 搜索</button>
+                    <button class="search-submit-btn" id="searchSubmitBtn" type="button">搜索</button>
                 </div>
             </div>
             <div class="filter-status" id="filterStatus"></div>
         </section>
 
-        <!-- ===== 分类快捷锚点导航 ===== -->
+        <!-- ===== 分类导航栏 ===== -->
         <nav class="category-nav-bar">
             <div class="category-tags" id="categoryTags">
                 <!-- 动态生成分类标签 -->
             </div>
         </nav>
 
-        <!-- ===== 导航卡片矩阵容器 ===== -->
+        <!-- ===== 网址卡片容器 ===== -->
         <main id="bookmarksContainer">
             <!-- 由 app.js 动态渲染分类与卡片 -->
         </main>
@@ -107,23 +107,22 @@
         <!-- ===== 页脚 ===== -->
         <footer class="cyber-footer">
             <div>
-                <span>SYS://NEXUS.HUB</span> &nbsp;|&nbsp; 
-                <span>ZERO-BUILD PURE CLIENT ARCHITECTURE</span> &nbsp;|&nbsp; 
-                <span>LOCAL PERSISTENCE ENABLED</span>
+                <span>个人导航</span> &nbsp;|&nbsp; 
+                <span>本地自动保存</span>
             </div>
             <div class="footer-stats">
-                <span>PRESS <b>[/]</b> TO SEARCH</span>
-                <span>PRESS <b>[ESC]</b> TO CANCEL</span>
+                <span>按 <b>[/]</b> 快速搜索</span>
+                <span>按 <b>[ESC]</b> 取消</span>
             </div>
         </footer>
     </div>
 
-    <!-- ===== 侧边栏赛博便签 (Scratchpad) ===== -->
+    <!-- ===== 侧边栏便签 (Scratchpad) ===== -->
     <aside class="scratchpad-drawer" id="scratchpadDrawer">
         <div class="drawer-header">
             <div class="drawer-title">
                 <span>📝</span>
-                <span>CYBER SCRATCHPAD // 随手便签</span>
+                <span>随手便签</span>
             </div>
             <button class="drawer-close-btn" id="closeScratchpadBtn" title="关闭便签">✕</button>
         </div>
@@ -131,7 +130,7 @@
             <textarea 
                 class="scratchpad-textarea" 
                 id="scratchpadText" 
-                placeholder="// 随时记录代码片段、待办事项、API Token 或临时备忘录...&#10;// 本地实时持久化，断电或刷新永不丢失。"
+                placeholder="记录临时文本、代码片段或待办备忘，内容会自动保存在本地浏览器中。"
             ></textarea>
         </div>
         <div class="drawer-footer">
@@ -147,59 +146,59 @@
     <div class="modal-overlay" id="addBookmarkModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 class="modal-title">+ 收录自定义网址</h3>
+                <h3 class="modal-title">+ 添加自定义网址</h3>
                 <button class="drawer-close-btn" id="closeAddModalBtn">✕</button>
             </div>
             <form id="addBookmarkForm">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-label" for="bmTitle">网站名称 / TITLE *</label>
-                        <input type="text" class="form-input" id="bmTitle" placeholder="例如: 个人博客 / 内部运维后台" required>
+                        <label class="form-label" for="bmTitle">网站名称 *</label>
+                        <input type="text" class="form-input" id="bmTitle" placeholder="例如: 个人博客 / 内部后台" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="bmUrl">目标网址 / TARGET URL *</label>
+                        <label class="form-label" for="bmUrl">网站链接 *</label>
                         <input type="text" class="form-input" id="bmUrl" placeholder="例如: https://example.com" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="bmCat">收录分类 / CATEGORY</label>
+                        <label class="form-label" for="bmCat">选择分类</label>
                         <select class="form-select" id="bmCat">
                             <option value="custom">⭐ 我的收藏 (CUSTOM)</option>
-                            <option value="games">🎮 赛博小游戏 (GAMES)</option>
-                            <option value="ai">🤖 AI 智能中枢 (AI)</option>
+                            <option value="games">🎮 小游戏 (GAMES)</option>
+                            <option value="ai">🤖 AI 工具 (AI)</option>
                             <option value="dev">💻 开发者生态 (DEV)</option>
                             <option value="design">🎨 设计与视效 (DESIGN)</option>
-                            <option value="tools">⚡ 生产力工具 (TOOLS)</option>
-                            <option value="media">🌐 资讯与社区 (MEDIA)</option>
+                            <option value="tools">⚡ 效率工具 (TOOLS)</option>
+                            <option value="media">🌐 社区资讯 (MEDIA)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="bmDesc">功能描述 / DESCRIPTION</label>
-                        <input type="text" class="form-input" id="bmDesc" placeholder="简要说明此站点的核心用途...">
+                        <label class="form-label" for="bmDesc">简介描述</label>
+                        <input type="text" class="form-input" id="bmDesc" placeholder="简要说明此网站的主要用途...">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="bmBadge">角标特征文字 / BADGE</label>
-                        <input type="text" class="form-input" id="bmBadge" placeholder="例如: PRO / API / DOC" maxlength="6">
+                        <label class="form-label" for="bmBadge">标签文字</label>
+                        <input type="text" class="form-input" id="bmBadge" placeholder="例如: 常用 / 文档" maxlength="6">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="cyber-btn" id="cancelAddModalBtn">取消</button>
-                    <button type="submit" class="cyber-btn primary">确认收录</button>
+                    <button type="submit" class="cyber-btn primary">确认添加</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ===== 快捷键帮助 Modal ===== -->
+    <!-- ===== 快捷键说明 Modal ===== -->
     <div class="modal-overlay" id="shortcutsModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 class="modal-title">⌨️ 快捷指令矩阵</h3>
+                <h3 class="modal-title">⌨️ 快捷键说明</h3>
                 <button class="drawer-close-btn" id="closeShortcutsBtn">✕</button>
             </div>
             <div class="modal-body">
                 <div class="shortcuts-grid">
                     <div class="shortcut-item">
-                        <span class="shortcut-desc">聚焦搜索 / 过滤</span>
+                        <span class="shortcut-desc">聚焦搜索栏</span>
                         <span class="shortcut-key">/ 或 Ctrl + K</span>
                     </div>
                     <div class="shortcut-item">
@@ -207,11 +206,11 @@
                         <span class="shortcut-key">Esc</span>
                     </div>
                     <div class="shortcut-item">
-                        <span class="shortcut-desc">唤出新增书签</span>
+                        <span class="shortcut-desc">添加新网址</span>
                         <span class="shortcut-key">Alt + N</span>
                     </div>
                     <div class="shortcut-item">
-                        <span class="shortcut-desc">唤出随手便签</span>
+                        <span class="shortcut-desc">打开随手便签</span>
                         <span class="shortcut-key">Alt + S</span>
                     </div>
                     <div class="shortcut-item">
@@ -219,7 +218,7 @@
                         <span class="shortcut-key">Enter</span>
                     </div>
                     <div class="shortcut-item">
-                        <span class="shortcut-desc">切换色彩光谱</span>
+                        <span class="shortcut-desc">切换主题颜色</span>
                         <span class="shortcut-key">点击顶部主题按钮</span>
                     </div>
                 </div>
@@ -231,23 +230,23 @@
     <div class="modal-overlay" id="dataModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 class="modal-title">⚙️ 配置与数据流管理</h3>
+                <h3 class="modal-title">⚙️ 数据备份与设置</h3>
                 <button class="drawer-close-btn" id="closeDataBtn">✕</button>
             </div>
             <div class="modal-body">
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6;">
-                    所有自定义书签、便签草稿与搜索引擎偏好均加密保存在浏览器本地 LocalStorage 中。你可以导出 JSON 备份或在其它设备恢复。
+                    自定义网址、便签草稿与搜索引擎偏好均保存在当前浏览器的本地存储中。你可以导出 JSON 备份，或在其他设备上导入恢复。
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <button class="cyber-btn primary" id="exportJsonBtn" style="justify-content: center; width: 100%;">
-                        💾 导出完整备份 (JSON)
+                        💾 导出备份文件 (JSON)
                     </button>
                     <label class="cyber-btn" style="justify-content: center; width: 100%; cursor: pointer;">
-                        📂 导入配置文件
+                        📂 导入备份文件
                         <input type="file" id="importJsonInput" accept=".json" style="display: none;">
                     </label>
                     <button class="cyber-btn" id="resetDataBtn" style="justify-content: center; width: 100%; color: #ff5252; border-color: rgba(255, 82, 82, 0.4); margin-top: 10px;">
-                        ⚠️ 恢复出厂设置 (清空自定义数据)
+                        ⚠️ 恢复初始默认设置
                     </button>
                 </div>
             </div>

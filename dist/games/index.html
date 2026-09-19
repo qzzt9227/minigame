@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEXUS // 赛博游戏大厅 ARCADE</title>
+    <title>游戏大厅</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -343,128 +343,128 @@
     <div class="scanline"></div>
 
     <div class="container">
-        <!-- ===== HUD 顶栏 ===== -->
+        <!-- ===== 顶栏 ===== -->
         <header class="header">
             <div class="brand-group">
                 <div class="brand-icon">🎮</div>
                 <div class="brand-text">
-                    <h1>NEXUS // ARCADE</h1>
-                    <span>CYBER ARCADE CENTER // 赛博街机游戏大厅</span>
+                    <h1>游戏大厅</h1>
+                    <span>在线即开即玩小游戏</span>
                 </div>
             </div>
             <a href="../index.html" class="back-nav-btn">
-                <span>←</span> <span>返回导航中枢</span>
+                <span>←</span> <span>返回导航主页</span>
             </a>
         </header>
 
         <!-- ===== 横幅介绍 ===== -->
         <section class="arcade-hero">
             <div class="hero-info">
-                <h2>极客游乐场 // INSTANT PLAY</h2>
+                <h2>游戏列表</h2>
                 <p>
-                    纯原生前端驱动的极客即开即玩小游戏合集。零构建、低开销、60 FPS 流畅物理与粒子视效，支持桌面键位与移动端触控，点击即可启动。
+                    网页小游戏合集，无需下载安装，支持电脑键盘与手机触控操作，点击即可开始。
                 </p>
             </div>
             <div class="hero-stats">
                 <div class="stat-box">
-                    <div class="stat-label">INSTALLED GAMES</div>
-                    <div class="stat-val">4 TITLES</div>
+                    <div class="stat-label">收录游戏</div>
+                    <div class="stat-val">4 款</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-label">SYSTEM ENGINE</div>
-                    <div class="stat-val" style="color:var(--primary);">WEBGL / 2D</div>
+                    <div class="stat-label">运行帧率</div>
+                    <div class="stat-val" style="color:var(--primary);">60 FPS</div>
                 </div>
             </div>
         </section>
 
         <!-- ===== 游戏卡片网格 ===== -->
         <main class="games-grid">
-            <!-- 游戏 1: 3D 赛车竞速 -->
+            <!-- 游戏 1: 3D 赛车 -->
             <a href="racing/index.html" class="game-card" style="--badge-color:#e8652b; --badge-rgb:232,101,43;">
                 <div>
                     <div class="card-top">
-                        <span class="game-badge">3D WEBGL</span>
+                        <span class="game-badge">3D 竞速</span>
                         <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">REV // 2.0</span>
                     </div>
                     <div class="game-icon-box">🏎️</div>
-                    <h3 class="game-title">3D 赛车竞速</h3>
+                    <h3 class="game-title">3D 赛车</h3>
                     <p class="game-desc">
-                        在环形多变赛道上与 AI 对手一决高下！真实物理碰撞、手刹漂移、速度模糊与三圈计时赛。
+                        在环形赛道上与 AI 对手同台竞速，包含物理碰撞、漂移和三圈计时挑战。
                     </p>
                     <div class="tags-row">
                         <span class="tag-item">Three.js</span>
-                        <span class="tag-item">OBB-SAT 碰撞</span>
-                        <span class="tag-item">AI 竞速</span>
-                        <span class="tag-item">触屏摇杆</span>
+                        <span class="tag-item">物理碰撞</span>
+                        <span class="tag-item">AI 对手</span>
+                        <span class="tag-item">触屏支持</span>
                     </div>
                 </div>
-                <div class="play-btn">START RACE // 开始比赛</div>
+                <div class="play-btn">开始游戏</div>
             </a>
 
-            <!-- 游戏 2: 赛博星战 -->
+            <!-- 游戏 2: 太空战机 -->
             <a href="shooter/index.html" class="game-card" style="--badge-color:#00c8ff; --badge-rgb:0,200,255;">
                 <div>
                     <div class="card-top">
-                        <span class="game-badge">ACTION SHMUP</span>
+                        <span class="game-badge">纵版射击</span>
                         <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">WAVE // 60FPS</span>
                     </div>
                     <div class="game-icon-box">🚀</div>
-                    <h3 class="game-title">赛博星战 2077</h3>
+                    <h3 class="game-title">太空战机</h3>
                     <p class="game-desc">
-                        驾驶等离子巡航战机迎击深空智械集群，拾取多联装散射与护盾强化，引爆全屏 EMP 冲击波。
+                        经典竖版弹幕空战，击落敌机拾取能量道具升级弹道，引爆炸弹全屏清屏。
                     </p>
                     <div class="tags-row">
-                        <span class="tag-item">Canvas 60FPS</span>
-                        <span class="tag-item">EMP 核爆</span>
+                        <span class="tag-item">弹幕射击</span>
                         <span class="tag-item">武器进阶</span>
-                        <span class="tag-item">粒子光效</span>
+                        <span class="tag-item">全屏炸弹</span>
+                        <span class="tag-item">触屏滑动</span>
                     </div>
                 </div>
-                <div class="play-btn">LAUNCH SHIP // 战机起飞</div>
+                <div class="play-btn">开始游戏</div>
             </a>
 
-            <!-- 游戏 3: 霓虹弹球打砖块 -->
+            <!-- 游戏 3: 弹珠打砖块 -->
             <a href="breakout/index.html" class="game-card" style="--badge-color:#b05bf8; --badge-rgb:176,91,248;">
                 <div>
                     <div class="card-top">
-                        <span class="game-badge">ARCADE BREAK</span>
+                        <span class="game-badge">经典街机</span>
                         <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">COMBO // MULTI</span>
                     </div>
                     <div class="game-icon-box">⚡</div>
-                    <h3 class="game-title">霓虹弹球打砖块</h3>
+                    <h3 class="game-title">弹珠打砖块</h3>
                     <p class="game-desc">
-                        经典街机弹球的高能赛博重构，3球分裂分身道具、多阶护盾砖块冲击与连击音画反馈。
+                        休闲打砖块游戏，拾取多球分身和加长挡板道具，挑战高分连击。
                     </p>
                     <div class="tags-row">
                         <span class="tag-item">物理反弹</span>
                         <span class="tag-item">多分身球</span>
-                        <span class="tag-item">动态拖尾</span>
-                        <span class="tag-item">合成音效</span>
+                        <span class="tag-item">连击奖励</span>
+                        <span class="tag-item">鼠标/触屏</span>
                     </div>
                 </div>
-                <div class="play-btn">BREAK BRICKS // 即刻开打</div>
+                <div class="play-btn">开始游戏</div>
             </a>
 
-            <!-- 游戏 4: 赛博贪吃蛇 -->
+            <!-- 游戏 4: 经典贪吃蛇 -->
             <a href="snake/index.html" class="game-card" style="--badge-color:#00ff9d; --badge-rgb:0,255,157;">
                 <div>
                     <div class="card-top">
-                        <span class="game-badge">NEURAL RETRO</span>
+                        <span class="game-badge">休闲益智</span>
                         <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">SPEED // 2077</span>
                     </div>
                     <div class="game-icon-box">🐍</div>
-                    <h3 class="game-title">赛博贪吃蛇 2077</h3>
+                    <h3 class="game-title">经典贪吃蛇</h3>
                     <p class="game-desc">
-                        穿梭于高维矩阵的神经网络光蛇，吞噬能量核获得过载加速，挑战极限长度与超频反射。
+                        经典贪吃蛇玩法，吃掉金色能量点加速成长，考验反应力与路线规划。
                     </p>
                     <div class="tags-row">
-                        <span class="tag-item">网格矩阵</span>
-                        <span class="tag-item">能量过载</span>
-                        <span class="tag-item">虚拟十字键</span>
-                        <span class="tag-item">光速挑战</span>
+                        <span class="tag-item">网格地图</span>
+                        <span class="tag-item">加速冲刺</span>
+                        <span class="tag-item">虚拟按键</span>
+                        <span class="tag-item">最高分纪录</span>
                     </div>
                 </div>
-                <div class="play-btn">JACK IN // 接入矩阵</div>
+                <div class="play-btn">开始游戏</div>
             </a>
         </main>
     </div>

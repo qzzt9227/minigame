@@ -55,27 +55,27 @@
         // 社区与媒体
         { id: 'p30', title: 'Bilibili', url: 'https://www.bilibili.com', desc: '中国领先的年轻人文化社区与知识视频网站', cat: 'media', badge: 'VID', icon: 'BILI', clicks: 0 },
         { id: 'p31', title: 'YouTube', url: 'https://www.youtube.com', desc: '全球最庞大的视频与高阶知识流媒体平台', cat: 'media', badge: 'VID', icon: 'YT', clicks: 0 },
-        { id: 'p32', title: 'V2EX', url: 'https://www.v2ex.com', desc: '一个关于创意、技术与美好事物的极客社区', cat: 'media', badge: 'COM', icon: 'V2', clicks: 0 },
-        { id: 'p33', title: '掘金', url: 'https://juejin.cn', desc: '面向开发者的中文高品质技术沉淀与热点交流平台', cat: 'media', badge: 'DEV', icon: 'JJ', clicks: 0 },
-        { id: 'p34', title: '知乎', url: 'https://www.zhihu.com', desc: '中文互联网高质量问答社区与各领域深度洞见', cat: 'media', badge: 'Q&A', icon: 'ZH', clicks: 0 },
-        { id: 'p35', title: 'GitHub Trending', url: 'https://github.com/trending', desc: '查看今日、本周全网最热门开源项目动态榜', cat: 'media', badge: 'TOP', icon: 'HOT', clicks: 0 },
+        { id: 'p32', title: 'V2EX', url: 'https://www.v2ex.com', desc: '一个关于创意、技术与交流的分享社区', cat: 'media', badge: 'COM', icon: 'V2', clicks: 0 },
+        { id: 'p33', title: '掘金', url: 'https://juejin.cn', desc: '中文技术沉淀与经验交流平台', cat: 'media', badge: 'DEV', icon: 'JJ', clicks: 0 },
+        { id: 'p34', title: '知乎', url: 'https://www.zhihu.com', desc: '中文问答社区与各领域经验见解', cat: 'media', badge: 'Q&A', icon: 'ZH', clicks: 0 },
+        { id: 'p35', title: 'GitHub Trending', url: 'https://github.com/trending', desc: '查看近期热门开源项目榜单', cat: 'media', badge: 'TOP', icon: 'HOT', clicks: 0 },
 
-        // 赛博小游戏
-        { id: 'g1', title: '3D 赛车竞速', url: 'games/racing/index.html', desc: 'Three.js 真实物理碰撞、手刹漂移、AI 对手与小地图', cat: 'games', badge: '3D', icon: '🏎️', clicks: 0 },
-        { id: 'g2', title: '赛博星战 2077', url: 'games/shooter/index.html', desc: '极速弹幕太空射击，武器多阶进阶与全屏 EMP 核爆', cat: 'games', badge: 'SHMUP', icon: '🚀', clicks: 0 },
-        { id: 'g3', title: '霓虹弹球打砖块', url: 'games/breakout/index.html', desc: '高能街机弹球重置，三球分裂分身道具与动态光效击打', cat: 'games', badge: 'BREAK', icon: '⚡', clicks: 0 },
-        { id: 'g4', title: '赛博贪吃蛇 2077', url: 'games/snake/index.html', desc: '高维网格神经网络光蛇，能量核过载加速与极限挑战', cat: 'games', badge: 'RETRO', icon: '🐍', clicks: 0 }
+        // 小游戏
+        { id: 'g1', title: '3D 赛车', url: 'games/racing/index.html', desc: '环形赛道竞速，包含碰撞、漂移和计时赛', cat: 'games', badge: '3D', icon: '🏎️', clicks: 0 },
+        { id: 'g2', title: '太空战机', url: 'games/shooter/index.html', desc: '经典竖版弹幕射击，武器升级与全屏炸弹', cat: 'games', badge: '射击', icon: '🚀', clicks: 0 },
+        { id: 'g3', title: '弹珠打砖块', url: 'games/breakout/index.html', desc: '经典打砖块，包含多球分身与连击奖励', cat: 'games', badge: '弹球', icon: '⚡', clicks: 0 },
+        { id: 'g4', title: '贪吃蛇', url: 'games/snake/index.html', desc: '经典贪吃蛇玩法，吃掉能量点获得加速与积分', cat: 'games', badge: '休闲', icon: '🐍', clicks: 0 }
     ];
 
     const CATEGORIES = [
         { key: 'all', name: '全部', badge: 'ALL' },
-        { key: 'ai', name: 'AI 智能中枢', badge: 'AI & LLM' },
-        { key: 'dev', name: '开发者生态', badge: 'DEV & ENG' },
+        { key: 'ai', name: 'AI 工具', badge: 'AI' },
+        { key: 'dev', name: '开发者生态', badge: 'DEV' },
         { key: 'design', name: '设计与视效', badge: 'DESIGN' },
-        { key: 'tools', name: '生产力工具', badge: 'TOOLS' },
-        { key: 'media', name: '资讯与社区', badge: 'MEDIA' },
-        { key: 'games', name: '🎮 赛博小游戏', badge: 'ARCADE' },
-        { key: 'custom', name: '我的收藏', badge: 'USER' }
+        { key: 'tools', name: '效率工具', badge: 'TOOLS' },
+        { key: 'media', name: '社区资讯', badge: 'MEDIA' },
+        { key: 'games', name: '🎮 小游戏', badge: 'GAMES' },
+        { key: 'custom', name: '我的收藏', badge: 'CUSTOM' }
     ];
 
     const SEARCH_ENGINES = {
@@ -341,7 +341,7 @@
             });
 
             if (filterStatusEl) {
-                filterStatusEl.textContent = `// 过滤匹配: ${matchCount} 个目标 [按 Enter 直接调用 ${SEARCH_ENGINES[currentEngine].name} 搜索]`;
+                filterStatusEl.textContent = `找到 ${matchCount} 个相关网址 [按 Enter 调用 ${SEARCH_ENGINES[currentEngine].name} 搜索]`;
                 filterStatusEl.classList.add('active');
             }
         }
@@ -438,9 +438,9 @@
                 banner.className = 'games-hero-banner';
                 banner.innerHTML = `
                     <div class="banner-left">
-                        <div class="banner-tag">ARCADE HUB // 赛博街机中枢</div>
-                        <h3 class="banner-title">NEXUS 独立游戏大厅</h3>
-                        <p class="banner-desc">4 款 60 FPS 极客原生轻量小游戏（3D 赛车竞速、赛博星战 2077、霓虹弹球打砖块、赛博贪吃蛇 2077），即开即玩，支持触屏与全屏模式。</p>
+                        <div class="banner-tag">休闲小憩</div>
+                        <h3 class="banner-title">小游戏大厅</h3>
+                        <p class="banner-desc">内置几款即开即玩的网页小游戏（3D 赛车、太空射击、弹珠打砖块、贪吃蛇），支持键盘与手机触控游玩。</p>
                     </div>
                     <a href="games/index.html" class="cyber-btn primary banner-btn" target="_blank" rel="noopener noreferrer">
                         <span>🎮</span> <span>打开游戏大厅</span> <span>→</span>
@@ -452,7 +452,7 @@
             if (items.length === 0 && cat.key === 'custom') {
                 grid.innerHTML = `
                     <div style="grid-column: 1/-1; padding: 28px; border: 1px dashed var(--border-bright); text-align: center; color: var(--text-dim); font-family: var(--font-code);">
-                        // 暂无自定义收藏。点击顶部导航栏 "+ 新增网址" 开始收录。
+                        // 暂无自定义收藏。点击右上角“+ 新增网址”即可添加。
                     </div>
                 `;
             } else {
@@ -572,8 +572,8 @@
             title: title.trim(),
             url: url.trim(),
             cat: cat || 'custom',
-            desc: desc.trim() || '用户自定义书签',
-            badge: badge.trim().toUpperCase() || 'USER',
+            desc: desc.trim() || '自定义网址',
+            badge: badge.trim().toUpperCase() || 'CUSTOM',
             icon: title.trim().slice(0, 2).toUpperCase(),
             clicks: 0
         };
@@ -581,15 +581,15 @@
         customBookmarks.unshift(newBookmark);
         saveCustomBookmarks();
         renderAllBookmarks();
-        showToast(`已成功收录: ${newBookmark.title}`);
+        showToast(`已添加: ${newBookmark.title}`);
     }
 
     function deleteCustomBookmark(id) {
-        if (!confirm('确定要移除此自定义书签吗？')) return;
+        if (!confirm('确定要删除此网址吗？')) return;
         customBookmarks = customBookmarks.filter(b => b.id !== id);
         saveCustomBookmarks();
         renderAllBookmarks();
-        showToast('书签已删除');
+        showToast('网址已删除');
     }
 
     // ==========================================
@@ -811,7 +811,7 @@
                     const t = document.getElementById('scratchpadText');
                     if (t) t.value = '';
                     if (dataModal) dataModal.classList.remove('active');
-                    showToast('已重置为初始系统状态');
+                    showToast('已恢复默认设置');
                 }
             });
         }
@@ -844,7 +844,7 @@
         themeBtn.addEventListener('click', () => {
             const nextIdx = (themes.indexOf(currentTheme) + 1) % themes.length;
             applyTheme(themes[nextIdx]);
-            showToast(`主题色阶切换: ${themes[nextIdx].toUpperCase()}`);
+            showToast('已切换主题: ' + themes[nextIdx]);
         });
     }
 
@@ -910,7 +910,7 @@
 
         const toast = document.createElement('div');
         toast.className = 'cyber-toast';
-        toast.textContent = `[SYS] ${message}`;
+        toast.textContent = message;
         container.appendChild(toast);
 
         setTimeout(() => {
