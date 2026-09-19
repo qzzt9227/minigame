@@ -58,7 +58,13 @@
         { id: 'p32', title: 'V2EX', url: 'https://www.v2ex.com', desc: '一个关于创意、技术与美好事物的极客社区', cat: 'media', badge: 'COM', icon: 'V2', clicks: 0 },
         { id: 'p33', title: '掘金', url: 'https://juejin.cn', desc: '面向开发者的中文高品质技术沉淀与热点交流平台', cat: 'media', badge: 'DEV', icon: 'JJ', clicks: 0 },
         { id: 'p34', title: '知乎', url: 'https://www.zhihu.com', desc: '中文互联网高质量问答社区与各领域深度洞见', cat: 'media', badge: 'Q&A', icon: 'ZH', clicks: 0 },
-        { id: 'p35', title: 'GitHub Trending', url: 'https://github.com/trending', desc: '查看今日、本周全网最热门开源项目动态榜', cat: 'media', badge: 'TOP', icon: 'HOT', clicks: 0 }
+        { id: 'p35', title: 'GitHub Trending', url: 'https://github.com/trending', desc: '查看今日、本周全网最热门开源项目动态榜', cat: 'media', badge: 'TOP', icon: 'HOT', clicks: 0 },
+
+        // 赛博小游戏
+        { id: 'g1', title: '3D 赛车竞速', url: 'games/racing/index.html', desc: 'Three.js 真实物理碰撞、手刹漂移、AI 对手与小地图', cat: 'games', badge: '3D', icon: '🏎️', clicks: 0 },
+        { id: 'g2', title: '赛博星战 2077', url: 'games/shooter/index.html', desc: '极速弹幕太空射击，武器多阶进阶与全屏 EMP 核爆', cat: 'games', badge: 'SHMUP', icon: '🚀', clicks: 0 },
+        { id: 'g3', title: '霓虹弹球打砖块', url: 'games/breakout/index.html', desc: '高能街机弹球重置，三球分裂分身道具与动态光效击打', cat: 'games', badge: 'BREAK', icon: '⚡', clicks: 0 },
+        { id: 'g4', title: '赛博贪吃蛇 2077', url: 'games/snake/index.html', desc: '高维网格神经网络光蛇，能量核过载加速与极限挑战', cat: 'games', badge: 'RETRO', icon: '🐍', clicks: 0 }
     ];
 
     const CATEGORIES = [
@@ -68,6 +74,7 @@
         { key: 'design', name: '设计与视效', badge: 'DESIGN' },
         { key: 'tools', name: '生产力工具', badge: 'TOOLS' },
         { key: 'media', name: '资讯与社区', badge: 'MEDIA' },
+        { key: 'games', name: '🎮 赛博小游戏', badge: 'ARCADE' },
         { key: 'custom', name: '我的收藏', badge: 'USER' }
     ];
 
@@ -425,6 +432,22 @@
             `;
 
             const grid = section.querySelector('.card-grid');
+
+            if (cat.key === 'games') {
+                const banner = document.createElement('div');
+                banner.className = 'games-hero-banner';
+                banner.innerHTML = `
+                    <div class="banner-left">
+                        <div class="banner-tag">ARCADE HUB // 赛博街机中枢</div>
+                        <h3 class="banner-title">NEXUS 独立游戏大厅</h3>
+                        <p class="banner-desc">4 款 60 FPS 极客原生轻量小游戏（3D 赛车竞速、赛博星战 2077、霓虹弹球打砖块、赛博贪吃蛇 2077），即开即玩，支持触屏与全屏模式。</p>
+                    </div>
+                    <a href="games/index.html" class="cyber-btn primary banner-btn" target="_blank" rel="noopener noreferrer">
+                        <span>🎮</span> <span>打开游戏大厅</span> <span>→</span>
+                    </a>
+                `;
+                section.insertBefore(banner, grid);
+            }
 
             if (items.length === 0 && cat.key === 'custom') {
                 grid.innerHTML = `

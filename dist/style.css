@@ -528,6 +528,84 @@ body {
     border-left: 3px solid var(--primary);
 }
 
+/* ===== 小游戏专属横幅 ===== */
+.games-hero-banner {
+    background: linear-gradient(135deg, rgba(18, 18, 24, 0.95), rgba(28, 28, 38, 0.7));
+    border: 1px solid var(--border-bright);
+    clip-path: var(--clip-angle-md);
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.games-hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.banner-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.banner-tag {
+    font-size: 11px;
+    font-family: var(--font-code);
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.banner-title {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.banner-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.banner-btn {
+    padding: 12px 24px;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 0 16px var(--primary-glow);
+    animation: pulseGlow 2.5s infinite alternate;
+}
+
+@media (max-width: 680px) {
+    .games-hero-banner {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 18px 20px;
+    }
+    .banner-btn {
+        text-align: center;
+        justify-content: center;
+    }
+}
+
 .category-title {
     font-family: var(--font-heading);
     font-size: 18px;

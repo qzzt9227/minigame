@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS // 赛博游戏大厅 ARCADE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0a0a0d;
+            --bg-panel: rgba(18, 18, 24, 0.88);
+            --bg-card: #121217;
+            --bg-card-hover: #181822;
+            --border-color: #24242e;
+            --border-bright: #383848;
+            --primary: #00c8ff;
+            --primary-glow: rgba(0, 200, 255, 0.25);
+            --accent: #e8652b;
+            --accent-glow: rgba(232, 101, 43, 0.25);
+            --neon-green: #00ff9d;
+            --neon-purple: #b05bf8;
+            --text-main: #f0f2f5;
+            --text-muted: #8a8d9a;
+            --text-dim: #545663;
+            --font-heading: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            --font-code: 'Rajdhani', monospace, sans-serif;
+            --clip-sm: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            --clip-md: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Noto Sans SC', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 赛博网格与扫描线 */
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            opacity: 0.35;
+            z-index: 2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 24px 80px 24px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* 顶部 HUD 导航 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            clip-path: var(--clip-md);
+            margin-bottom: 36px;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: rgba(0, 200, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: var(--font-heading);
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: var(--clip-sm);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+        .brand-text h1 {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+        .brand-text span {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-family: var(--font-code);
+            letter-spacing: 1px;
+        }
+
+        .back-nav-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-bright);
+            color: var(--text-main);
+            padding: 8px 18px;
+            clip-path: var(--clip-sm);
+            font-family: var(--font-heading);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .back-nav-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #08080c;
+            box-shadow: 0 0 14px var(--primary-glow);
+        }
+
+        /* 游乐场横幅介绍 */
+        .arcade-hero {
+            background: linear-gradient(135deg, rgba(18, 18, 24, 0.9), rgba(28, 28, 38, 0.5));
+            border: 1px solid var(--border-color);
+            clip-path: var(--clip-md);
+            padding: 28px 32px;
+            margin-bottom: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        .arcade-hero::after {
+            content: 'ARCADE';
+            position: absolute;
+            right: 20px;
+            bottom: -25px;
+            font-family: var(--font-heading);
+            font-size: 110px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.02);
+            pointer-events: none;
+            letter-spacing: 4px;
+        }
+        .hero-info h2 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+        .hero-info p {
+            font-size: 14px;
+            color: var(--text-muted);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        .hero-stats {
+            display: flex;
+            gap: 24px;
+        }
+        .stat-box {
+            text-align: right;
+            font-family: var(--font-code);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+
+        /* 游戏大卡片网格 */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            clip-path: var(--clip-md);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+        }
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        .game-card:hover {
+            transform: translateY(-4px);
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--primary-glow);
+        }
+        .game-card:hover::before {
+            width: 100%;
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .game-badge {
+            font-family: var(--font-code);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            background: rgba(var(--badge-rgb, 0, 200, 255), 0.15);
+            border: 1px solid var(--badge-color, var(--primary));
+            color: var(--badge-color, var(--primary));
+            clip-path: var(--clip-sm);
+        }
+        .game-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-bright);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        .game-card:hover .game-icon-box {
+            transform: scale(1.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .game-title {
+            font-family: var(--font-heading);
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .game-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 18px;
+            min-height: 40px;
+        }
+
+        .tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+        .tag-item {
+            font-size: 11px;
+            font-family: var(--font-code);
+            padding: 2px 7px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-dim);
+        }
+
+        .play-btn {
+            display: block;
+            width: 100%;
+            background: rgba(0, 200, 255, 0.12);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 0;
+            text-align: center;
+            font-family: var(--font-heading);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            clip-path: var(--clip-sm);
+            transition: all 0.2s;
+        }
+        .game-card:hover .play-btn {
+            background: var(--primary);
+            color: #08080c;
+            box-shadow: 0 0 14px var(--primary-glow);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 14px; align-items: stretch; }
+            .arcade-hero { flex-direction: column; gap: 18px; }
+            .hero-stats { justify-content: flex-start; }
+            .stat-box { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-overlay"></div>
+    <div class="scanline"></div>
+
+    <div class="container">
+        <!-- ===== HUD 顶栏 ===== -->
+        <header class="header">
+            <div class="brand-group">
+                <div class="brand-icon">🎮</div>
+                <div class="brand-text">
+                    <h1>NEXUS // ARCADE</h1>
+                    <span>CYBER ARCADE CENTER // 赛博街机游戏大厅</span>
+                </div>
+            </div>
+            <a href="../index.html" class="back-nav-btn">
+                <span>←</span> <span>返回导航中枢</span>
+            </a>
+        </header>
+
+        <!-- ===== 横幅介绍 ===== -->
+        <section class="arcade-hero">
+            <div class="hero-info">
+                <h2>极客游乐场 // INSTANT PLAY</h2>
+                <p>
+                    纯原生前端驱动的极客即开即玩小游戏合集。零构建、低开销、60 FPS 流畅物理与粒子视效，支持桌面键位与移动端触控，点击即可启动。
+                </p>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-box">
+                    <div class="stat-label">INSTALLED GAMES</div>
+                    <div class="stat-val">4 TITLES</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">SYSTEM ENGINE</div>
+                    <div class="stat-val" style="color:var(--primary);">WEBGL / 2D</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 游戏卡片网格 ===== -->
+        <main class="games-grid">
+            <!-- 游戏 1: 3D 赛车竞速 -->
+            <a href="racing/index.html" class="game-card" style="--badge-color:#e8652b; --badge-rgb:232,101,43;">
+                <div>
+                    <div class="card-top">
+                        <span class="game-badge">3D WEBGL</span>
+                        <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">REV // 2.0</span>
+                    </div>
+                    <div class="game-icon-box">🏎️</div>
+                    <h3 class="game-title">3D 赛车竞速</h3>
+                    <p class="game-desc">
+                        在环形多变赛道上与 AI 对手一决高下！真实物理碰撞、手刹漂移、速度模糊与三圈计时赛。
+                    </p>
+                    <div class="tags-row">
+                        <span class="tag-item">Three.js</span>
+                        <span class="tag-item">OBB-SAT 碰撞</span>
+                        <span class="tag-item">AI 竞速</span>
+                        <span class="tag-item">触屏摇杆</span>
+                    </div>
+                </div>
+                <div class="play-btn">START RACE // 开始比赛</div>
+            </a>
+
+            <!-- 游戏 2: 赛博星战 -->
+            <a href="shooter/index.html" class="game-card" style="--badge-color:#00c8ff; --badge-rgb:0,200,255;">
+                <div>
+                    <div class="card-top">
+                        <span class="game-badge">ACTION SHMUP</span>
+                        <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">WAVE // 60FPS</span>
+                    </div>
+                    <div class="game-icon-box">🚀</div>
+                    <h3 class="game-title">赛博星战 2077</h3>
+                    <p class="game-desc">
+                        驾驶等离子巡航战机迎击深空智械集群，拾取多联装散射与护盾强化，引爆全屏 EMP 冲击波。
+                    </p>
+                    <div class="tags-row">
+                        <span class="tag-item">Canvas 60FPS</span>
+                        <span class="tag-item">EMP 核爆</span>
+                        <span class="tag-item">武器进阶</span>
+                        <span class="tag-item">粒子光效</span>
+                    </div>
+                </div>
+                <div class="play-btn">LAUNCH SHIP // 战机起飞</div>
+            </a>
+
+            <!-- 游戏 3: 霓虹弹球打砖块 -->
+            <a href="breakout/index.html" class="game-card" style="--badge-color:#b05bf8; --badge-rgb:176,91,248;">
+                <div>
+                    <div class="card-top">
+                        <span class="game-badge">ARCADE BREAK</span>
+                        <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">COMBO // MULTI</span>
+                    </div>
+                    <div class="game-icon-box">⚡</div>
+                    <h3 class="game-title">霓虹弹球打砖块</h3>
+                    <p class="game-desc">
+                        经典街机弹球的高能赛博重构，3球分裂分身道具、多阶护盾砖块冲击与连击音画反馈。
+                    </p>
+                    <div class="tags-row">
+                        <span class="tag-item">物理反弹</span>
+                        <span class="tag-item">多分身球</span>
+                        <span class="tag-item">动态拖尾</span>
+                        <span class="tag-item">合成音效</span>
+                    </div>
+                </div>
+                <div class="play-btn">BREAK BRICKS // 即刻开打</div>
+            </a>
+
+            <!-- 游戏 4: 赛博贪吃蛇 -->
+            <a href="snake/index.html" class="game-card" style="--badge-color:#00ff9d; --badge-rgb:0,255,157;">
+                <div>
+                    <div class="card-top">
+                        <span class="game-badge">NEURAL RETRO</span>
+                        <span style="font-size:11px; font-family:var(--font-code); color:var(--text-dim);">SPEED // 2077</span>
+                    </div>
+                    <div class="game-icon-box">🐍</div>
+                    <h3 class="game-title">赛博贪吃蛇 2077</h3>
+                    <p class="game-desc">
+                        穿梭于高维矩阵的神经网络光蛇，吞噬能量核获得过载加速，挑战极限长度与超频反射。
+                    </p>
+                    <div class="tags-row">
+                        <span class="tag-item">网格矩阵</span>
+                        <span class="tag-item">能量过载</span>
+                        <span class="tag-item">虚拟十字键</span>
+                        <span class="tag-item">光速挑战</span>
+                    </div>
+                </div>
+                <div class="play-btn">JACK IN // 接入矩阵</div>
+            </a>
+        </main>
+    </div>
+</body>
+</html>

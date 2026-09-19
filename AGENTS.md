@@ -1,4 +1,4 @@
-# AGENTS.md — NEXUS // Cyber Personal Navigation Station
+# AGENTS.md — NEXUS // Cyber Personal Navigation Station & Arcade
 
 本文件为 AI 代理（Agents）及协作者开发、维护与持续演进本项目提供核心技术架构、系统模块说明、代码规范及自动化协作指南。
 
@@ -6,11 +6,11 @@
 
 ## 1. 项目概览 (Project Overview)
 
-- **项目名称**：`NEXUS // HUB` (赛博多功能个人导航中枢)
-- **目标定位**：极客、开发者与数字化工作者的高能个人导航与效率仪表盘。
-- **技术栈**：原生 HTML5 / 现代 CSS3 (CSS Variables, Flexbox, Grid, Clip-path) / 原生 JavaScript (ES6+)
+- **项目名称**：`NEXUS // HUB` (赛博多功能个人导航中枢与街机游戏大厅)
+- **目标定位**：极客、开发者与数字化工作者的高能个人导航、效率仪表盘与轻量即开即玩游戏矩阵。
+- **技术栈**：原生 HTML5 / 现代 CSS3 (CSS Variables, Flexbox, Grid, Clip-path) / 原生 JavaScript (ES6+) / Three.js (r128)
 - **架构范式**：**Zero-Build（零构建）** 纯静态架构，无任何 Webpack/Vite/Babel 编译依赖，支持任何静态托管与浏览器直接打开。
-- **目标仓库**：`https://github.com/qzzt9227/minigame.git` (主分支: `master`)
+- **目标仓库**：`https://github.com/qzzt9227/minigame.git` (主分支: `master`，同步维护 `main`)
 
 ---
 
@@ -23,7 +23,17 @@ minigame-master/
 └── dist/                 # 核心运行与静态发布目录
     ├── index.html        # 导航中枢主结构（HUD 状态栏、搜索控制台、卡片容器、便签抽屉、弹窗）
     ├── style.css         # 赛博朋克深色高对比度样式、切角多边形、动态光效、响应式媒体查询
-    └── app.js            # 核心业务逻辑（Canvas 网格背景、时钟、多引擎搜索、书签 CRUD、便签持久化）
+    ├── app.js            # 核心业务逻辑（Canvas 网格背景、时钟、多引擎搜索、书签 CRUD、便签持久化）
+    └── games/            # 独立赛博小游戏集群目录
+        ├── index.html    # 游戏大厅 (Arcade Lobby - 游戏展示列表、状态概览、快速启动入口)
+        ├── racing/       # 3D 赛车竞速 (Three.js 真实物理、漂移、AI 对手、触屏双摇杆)
+        │   └── index.html
+        ├── shooter/      # 赛博星战 2077 (Canvas 60FPS 纵版弹幕射击、武器进阶、EMP 核爆)
+        │   └── index.html
+        ├── breakout/     # 霓虹弹球打砖块 (多球分身道具、连击得分、动态光效反弹)
+        │   └── index.html
+        └── snake/        # 赛博贪吃蛇 2077 (高维网格、能量过载加速、触屏虚拟按键)
+            └── index.html
 ```
 
 ---
@@ -51,17 +61,18 @@ minigame-master/
   - 自动高亮并显示匹配数量；无匹配分类区自动收起。
   - 按 `Enter` 直接跳转全网搜索引擎；按 `Esc` 一键清空并还原全部卡片。
 
-### 3.4 书签矩阵与用户自定义管理 (Bookmarks & CRUD)
+### 3.4 书签矩阵与赛博游戏矩阵 (Bookmarks & Arcade System)
 - **分类结构**：
   - `ai`：AI 智能中枢（ChatGPT, Claude, DeepSeek, Gemini, Cursor, v0, Hugging Face 等）
   - `dev`：开发者生态（GitHub, Vercel, Stack Overflow, MDN, NPM, Docker Hub 等）
   - `design`：设计与视效（Figma, Dribbble, Unsplash, Iconfont, Coolors 等）
   - `tools`：生产力工具（Notion, 飞书, DeepL, Regex101, JSON Crack, Speedtest 等）
   - `media`：资讯与社区（Bilibili, YouTube, V2EX, 掘金, 知乎, GitHub Trending 等）
+  - `games`：**赛博小游戏**（包含“打开游戏大厅”高亮专属横幅入口及各独立游戏直达卡片）
   - `custom`：我的收藏（用户本地自定义新增）
-- **本地存储持久化**：
-  - 自定义书签保存于 `cyber_nav_custom_bookmarks`。
-  - 支持新增、动态生成两字首字母徽章、点击量自增统计与一键删除。
+- **游戏大厅体系 (`dist/games/`)**：
+  - 拥有独立的 `games/index.html` 游戏大厅，展现全部游戏详情、技术指标与独立启动按钮。
+  - 每个独立小游戏文件夹（`racing/`, `shooter/`, `breakout/`, `snake/`）均具备自包含的纯静态 `index.html`，带有返回大厅与返回主导航的快捷导航条，支持桌面键位与移动端触控，音频基于 Web Audio API 纯代码实时合成，无任何外部大体积静态音频图片依赖。
 
 ### 3.5 赛博便签系统 (Cyber Scratchpad)
 - 右侧滑出式悬浮抽屉 (`#scratchpadDrawer`)。
@@ -94,7 +105,7 @@ npx serve dist
 # 方案 2: Python 内置 HTTP 服务
 python -m http.server 8080 -d dist
 
-# 方案 3: 双击在任意浏览器直接打开 dist/index.html
+# 方案 3: 双击在任意浏览器直接打开 dist/index.html 或 dist/games/index.html
 ```
 
 ---
@@ -105,12 +116,14 @@ python -m http.server 8080 -d dist
 
 1. **版本控制与远程推送铁律**：
    - 目标仓库为 `https://github.com/qzzt9227/minigame.git`。
-   - **每一次需求改动完成后，必须主动执行 `git add .`、规范 commit 消息，并推送至 `origin master` 分支**。
+   - **每一次需求改动完成后，必须主动执行 `git add .`、规范 commit 消息，并推送至 `origin master` 分支，同时保持 `origin main` 分支同步更新**，杜绝 Cloudflare Pages 漏触发或缓存错乱。
 2. **文档同步更新原则**：
    - 每次用户需求变更、增删功能模块或调整数据结构后，**必须同步修改更新 `AGENTS.md`**，保持文档与代码 100% 同步。
 3. **保持 Zero-Build 架构**：
    - 严禁擅自引入 Webpack/Vite/Rollup 等构建打包复杂依赖，保持开箱即用的原生纯静态 HTML/CSS/JS 架构。
 4. **视觉与设计规范一致性**：
    - 严格继承 Cyberpunk / High-Tech 风格：深色暗调（`#0a0a0d` / `#121217`）、高对比度发光色（`#00c8ff`, `#e8652b`, `#00ff9d`）、切角几何遮罩（`clip-path: polygon(...)`）、`Rajdhani` 等宽数字质感。
-5. **存储安全与容错**：
-   - 所有 `localStorage` 存取逻辑必须外包 `try...catch` 容错，防止在隐私模式或受限沙箱中抛出异常中断脚本。
+5. **游戏扩展规范**：
+   - 新增小游戏必须在 `dist/games/<game_name>/index.html` 下独立创建单页应用。
+   - 游戏必须提供双向导航返回链（`← 游戏大厅`、`⌂ 导航中枢`）。
+   - 游戏性能必须稳定在 60 FPS，内存友好，优先使用纯 Canvas / WebGL 与 Web Audio API 动态合成音效，避免加载重型外部资源。
