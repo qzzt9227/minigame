@@ -333,24 +333,35 @@
         open: function (options) {
             return new ColorPickerModal(options);
         },
-        attach: function (triggerEl, options = {}) {
+        attach: function (triggerEl, options = {}, maybeDefaultColor, maybeTitle) {
             if (typeof triggerEl === 'string') {
                 triggerEl = document.querySelector(triggerEl);
             }
             if (!triggerEl) return;
 
-            let curColor = options.defaultColor || '#00c8ff';
+            let opts = {};
+            if (typeof options === 'function') {
+                opts = {
+                    onChange: options,
+                    defaultColor: maybeDefaultColor || '#00c8ff',
+                    title: maybeTitle || '选择颜色'
+                };
+            } else {
+                opts = options || {};
+            }
+
+            let curColor = opts.defaultColor || '#00c8ff';
             triggerEl.style.backgroundColor = curColor;
 
             triggerEl.addEventListener('click', () => {
                 new ColorPickerModal({
-                    title: options.title || '选择颜色',
+                    title: opts.title || '选择颜色',
                     color: curColor,
-                    presetColors: options.presetColors || DEFAULT_PRESETS,
+                    presetColors: opts.presetColors || DEFAULT_PRESETS,
                     onSelect: (newColor) => {
                         curColor = newColor;
                         triggerEl.style.backgroundColor = newColor;
-                        if (options.onChange) options.onChange(newColor);
+                        if (opts.onChange) opts.onChange(newColor);
                     }
                 });
             });
