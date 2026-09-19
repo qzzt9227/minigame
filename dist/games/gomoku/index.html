@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>五子棋对弈</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #08080c;
+            color: #fff;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 10px;
+        }
+        .top-nav {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid #333;
+            color: #00c8ff;
+            padding: 8px 16px;
+            clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #00c8ff; color: #08080c; }
+        .nav-btn.secondary { color: #888; }
+        .nav-btn.secondary:hover { background: #333; color: #fff; }
+
+        .game-panel {
+            background: #10121b;
+            border: 2px solid #222638;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 0 35px rgba(0, 200, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 45px;
+        }
+        .info-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: #161a29;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #282f48;
+        }
+        .turn-text {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .turn-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            background: #20263c;
+            border: 1px solid #364064;
+            color: #ddd;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .action-btn:hover { background: #00c8ff; color: #08080c; }
+
+        #boardCanvas {
+            background: #1b1916;
+            border: 2px solid #3c3226;
+            border-radius: 8px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+            display: block;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="nav-btn">← 游戏大厅</a>
+        <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+    </div>
+
+    <div class="game-panel">
+        <div class="info-bar">
+            <div class="turn-text">
+                <span class="turn-dot" id="turnDot" style="background:#111; border: 1px solid #666;"></span>
+                <span id="turnLabel">黑方执棋 (玩家)</span>
+            </div>
+            <div class="btn-group">
+                <button class="action-btn" onclick="undoMove()">悔棋</button>
+                <button class="action-btn" onclick="initGame()">重新对弈</button>
+            </div>
+        </div>
+
+        <canvas id="boardCanvas"></canvas>
+    </div>
+
+    <script src="../shared/touch-controller.js"></script>
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, dur) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + dur);
+            } catch(e) {}
+        }
+
+        const canvas = document.getElementById('boardCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GRID = 15;
+        let CELL = 26;
+        let PADDING = 20;
+
+        function resize() {
+            const maxW = Math.min(window.innerWidth - 30, 440);
+            CELL = Math.floor((maxW - PADDING * 2) / (GRID - 1));
+            canvas.width = PADDING * 2 + (GRID - 1) * CELL;
+            canvas.height = canvas.width;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        let board = [];
+        let history = [];
+        let currentTurn = 1; // 1: 玩家(黑), 2: 电脑(白)
+        let winner = 0; // 0: 进行中, 1: 黑胜, 2: 白胜, 3: 平局
+
+        function initGame() {
+            board = Array.from({ length: GRID }, () => Array(GRID).fill(0));
+            history = [];
+            currentTurn = 1;
+            winner = 0;
+            updateStatus();
+            draw();
+        }
+
+        function updateStatus() {
+            const turnDot = document.getElementById('turnDot');
+            const turnLabel = document.getElementById('turnLabel');
+            if (winner === 1) {
+                turnLabel.textContent = '🎉 黑方获胜！';
+                turnDot.style.background = '#111';
+            } else if (winner === 2) {
+                turnLabel.textContent = '🤖 白方 (电脑) 获胜！';
+                turnDot.style.background = '#fff';
+            } else if (winner === 3) {
+                turnLabel.textContent = '平局！';
+            } else {
+                if (currentTurn === 1) {
+                    turnLabel.textContent = '黑方执棋 (你的回合)';
+                    turnDot.style.background = '#111';
+                } else {
+                    turnLabel.textContent = '白方执棋 (思考中...)';
+                    turnDot.style.background = '#fff';
+                }
+            }
+        }
+
+        function checkWin(r, c, color) {
+            const dirs = [
+                [[0, 1], [0, -1]],   // 水平
+                [[1, 0], [-1, 0]],   // 垂直
+                [[1, 1], [-1, -1]],  // 主对角
+                [[1, -1], [-1, 1]]   // 副对角
+            ];
+
+            for (const d of dirs) {
+                let count = 1;
+                for (const [dr, dc] of d) {
+                    let nr = r + dr, nc = c + dc;
+                    while (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === color) {
+                        count++;
+                        nr += dr;
+                        nc += dc;
+                    }
+                }
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        function placePiece(r, c) {
+            if (board[r][c] !== 0 || winner !== 0) return;
+
+            board[r][c] = currentTurn;
+            history.push({ r, c, turn: currentTurn });
+            playTone(currentTurn === 1 ? 400 : 550, 0.06);
+
+            if (checkWin(r, c, currentTurn)) {
+                winner = currentTurn;
+                updateStatus();
+                draw();
+                return;
+            }
+
+            if (history.length === GRID * GRID) {
+                winner = 3;
+                updateStatus();
+                draw();
+                return;
+            }
+
+            currentTurn = currentTurn === 1 ? 2 : 1;
+            updateStatus();
+            draw();
+
+            // 如果轮到电脑回合
+            if (currentTurn === 2 && winner === 0) {
+                setTimeout(aiMove, 250);
+            }
+        }
+
+        function aiMove() {
+            if (winner !== 0) return;
+            // 启发式评估打分函数
+            let bestScore = -Infinity;
+            let bestMove = { r: 7, c: 7 };
+
+            for (let r = 0; r < GRID; r++) {
+                for (let c = 0; c < GRID; c++) {
+                    if (board[r][c] === 0) {
+                        // 仅评估已有棋子两格以内的位置
+                        let hasNeighbor = false;
+                        for (let dr = -2; dr <= 2 && !hasNeighbor; dr++) {
+                            for (let dc = -2; dc <= 2; dc++) {
+                                const nr = r + dr, nc = c + dc;
+                                if (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] !== 0) {
+                                    hasNeighbor = true; break;
+                                }
+                            }
+                        }
+                        if (!hasNeighbor && history.length > 0) continue;
+
+                        const attackScore = evaluatePoint(r, c, 2);
+                        const defenseScore = evaluatePoint(r, c, 1);
+                        const totalScore = attackScore * 1.2 + defenseScore;
+
+                        if (totalScore > bestScore) {
+                            bestScore = totalScore;
+                            bestMove = { r, c };
+                        }
+                    }
+                }
+            }
+
+            placePiece(bestMove.r, bestMove.c);
+        }
+
+        function evaluatePoint(r, c, color) {
+            let total = 0;
+            const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+            for (const [dr, dc] of dirs) {
+                let count = 1;
+                let openEnds = 0;
+
+                // 正向
+                let nr = r + dr, nc = c + dc;
+                while (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === color) {
+                    count++; nr += dr; nc += dc;
+                }
+                if (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === 0) openEnds++;
+
+                // 反向
+                nr = r - dr; nc = c - dc;
+                while (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === color) {
+                    count++; nr -= dr; nc -= dc;
+                }
+                if (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === 0) openEnds++;
+
+                if (count >= 5) total += 100000;
+                else if (count === 4 && openEnds === 2) total += 10000;
+                else if (count === 4 && openEnds === 1) total += 1000;
+                else if (count === 3 && openEnds === 2) total += 1000;
+                else if (count === 3 && openEnds === 1) total += 100;
+                else if (count === 2 && openEnds === 2) total += 50;
+            }
+            return total;
+        }
+
+        function undoMove() {
+            if (winner !== 0 || history.length < 2) return;
+            const lastAI = history.pop();
+            board[lastAI.r][lastAI.c] = 0;
+            const lastPlayer = history.pop();
+            board[lastPlayer.r][lastPlayer.c] = 0;
+            currentTurn = 1;
+            updateStatus();
+            draw();
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (currentTurn !== 1 || winner !== 0) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left - PADDING;
+            const y = e.clientY - rect.top - PADDING;
+            const c = Math.round(x / CELL);
+            const r = Math.round(y / CELL);
+
+            if (r >= 0 && r < GRID && c >= 0 && c < GRID) {
+                placePiece(r, c);
+            }
+        });
+
+        function draw() {
+            ctx.fillStyle = '#1b1916';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制网格线
+            ctx.strokeStyle = '#614f3b';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < GRID; i++) {
+                ctx.beginPath();
+                ctx.moveTo(PADDING + i * CELL, PADDING);
+                ctx.lineTo(PADDING + i * CELL, canvas.height - PADDING);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(PADDING, PADDING + i * CELL);
+                ctx.lineTo(canvas.width - PADDING, PADDING + i * CELL);
+                ctx.stroke();
+            }
+
+            // 绘制星位
+            const stars = [3, 7, 11];
+            ctx.fillStyle = '#614f3b';
+            stars.forEach(sr => {
+                stars.forEach(sc => {
+                    ctx.beginPath();
+                    ctx.arc(PADDING + sc * CELL, PADDING + sr * CELL, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+
+            // 绘制棋子
+            for (let r = 0; r < GRID; r++) {
+                for (let c = 0; c < GRID; c++) {
+                    const stone = board[r][c];
+                    if (stone !== 0) {
+                        const sx = PADDING + c * CELL;
+                        const sy = PADDING + r * CELL;
+                        const radius = CELL * 0.45;
+
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+
+                        if (stone === 1) { // 黑子
+                            const grad = ctx.createRadialGradient(sx - 3, sy - 3, 1, sx, sy, radius);
+                            grad.addColorStop(0, '#555');
+                            grad.addColorStop(1, '#0a0a0a');
+                            ctx.fillStyle = grad;
+                            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+                            ctx.shadowBlur = 5;
+                            ctx.fill();
+                        } else { // 白子
+                            const grad = ctx.createRadialGradient(sx - 3, sy - 3, 1, sx, sy, radius);
+                            grad.addColorStop(0, '#ffffff');
+                            grad.addColorStop(1, '#d8d8d8');
+                            ctx.fillStyle = grad;
+                            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                            ctx.shadowBlur = 5;
+                            ctx.fill();
+                        }
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+
+            // 最后一手红点标记
+            if (history.length > 0) {
+                const last = history[history.length - 1];
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(PADDING + last.c * CELL, PADDING + last.r * CELL, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        TouchController.init({
+            buttons: [
+                { id: 'undo', label: '↩ 悔棋', key: 'u', code: 'KeyU' }
+            ],
+            onAction: (action, isPressed) => {
+                if (isPressed && action === 'undo') undoMove();
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>

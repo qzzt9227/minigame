@@ -64,7 +64,19 @@
         { id: 'g1', title: '3D 赛车', url: 'games/racing/index.html', desc: '环形赛道竞速，包含碰撞、漂移和计时赛', cat: 'games', badge: '3D', icon: '🏎️', clicks: 0 },
         { id: 'g2', title: '太空战机', url: 'games/shooter/index.html', desc: '经典竖版弹幕射击，武器升级与全屏炸弹', cat: 'games', badge: '射击', icon: '🚀', clicks: 0 },
         { id: 'g3', title: '弹珠打砖块', url: 'games/breakout/index.html', desc: '经典打砖块，包含多球分身与连击奖励', cat: 'games', badge: '弹球', icon: '⚡', clicks: 0 },
-        { id: 'g4', title: '贪吃蛇', url: 'games/snake/index.html', desc: '经典贪吃蛇玩法，吃掉能量点获得加速与积分', cat: 'games', badge: '休闲', icon: '🐍', clicks: 0 }
+        { id: 'g4', title: '经典贪吃蛇', url: 'games/snake/index.html', desc: '经典贪吃蛇玩法，吃掉能量点获得加速与积分', cat: 'games', badge: '休闲', icon: '🐍', clicks: 0 },
+        { id: 'g5', title: '俄罗斯方块', url: 'games/tetris/index.html', desc: '经典 7 种方块下落，支持旋转、投影与硬降', cat: 'games', badge: '方块', icon: '🧱', clicks: 0 },
+        { id: 'g6', title: '2048 数字方块', url: 'games/2048/index.html', desc: '滑动合并相同数字方块，冲击 2048 传奇', cat: 'games', badge: '益智', icon: '🔢', clicks: 0 },
+        { id: 'g7', title: '像素飞翔鸟', url: 'games/flappy/index.html', desc: '轻触跳跃穿越高低管道矩阵，挑战反应极限', cat: 'games', badge: '敏捷', icon: '🪶', clicks: 0 },
+        { id: 'g8', title: '经典乒乓球', url: 'games/pong/index.html', desc: '与电脑 AI 对决，动量反弹与加速回合拉扯', cat: 'games', badge: '竞技', icon: '🏓', clicks: 0 },
+        { id: 'g9', title: '经典扫雷', url: 'games/minesweeper/index.html', desc: '首点安全开局，支持一键插旗与多难度网格', cat: 'games', badge: '推理', icon: '💣', clicks: 0 },
+        { id: 'g10', title: '吃豆人迷宫', url: 'games/pacman/index.html', desc: '迷宫寻路吞吃金豆，吃下能量豆反杀幽灵', cat: 'games', badge: '街机', icon: '🟡', clicks: 0 },
+        { id: 'g11', title: '涂鸦跳跃', url: 'games/doodle-jump/index.html', desc: '踩踏台阶与弹簧高跳道具，不断向上攀登', cat: 'games', badge: '跳跃', icon: '🌀', clicks: 0 },
+        { id: 'g12', title: '无尽酷跑', url: 'games/runner/index.html', desc: '跳跃躲避尖刺，滑行避开飞鸟，速度递增冲刺', cat: 'games', badge: '酷跑', icon: '🏃', clicks: 0 },
+        { id: 'g13', title: '宝石消除', url: 'games/match3/index.html', desc: '交换相邻宝石完成连击消除，限时冲刺高分', cat: 'games', badge: '三消', icon: '💎', clicks: 0 },
+        { id: 'g14', title: '五子棋对弈', url: 'games/gomoku/index.html', desc: '15x15 棋盘搭载启发式 AI，支持悔棋对弈', cat: 'games', badge: '对弈', icon: '♟️', clicks: 0 },
+        { id: 'g15', title: '微型塔防', url: 'games/tower-defense/index.html', desc: '建造激光、重炮与冰霜塔阻击入侵怪物波次', cat: 'games', badge: '塔防', icon: '🏰', clicks: 0 },
+        { id: 'g16', title: '记忆翻牌', url: 'games/memory-flip/index.html', desc: '3D 翻转卡牌配对图案，考验瞬间记忆与专注', cat: 'games', badge: '记忆', icon: '🃏', clicks: 0 }
     ];
 
     const CATEGORIES = [

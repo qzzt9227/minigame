@@ -47,33 +47,6 @@
         .nav-btn:hover { background: #00c8ff; color: #08080c; }
         .nav-btn.secondary { color: #888; }
         .nav-btn.secondary:hover { background: #333; color: #fff; }
-        #mobileControls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 20;
-            display: none;
-        }
-        .bomb-btn {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            background: rgba(232, 101, 43, 0.25);
-            border: 2px solid #e8652b;
-            color: #fff;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 0 16px rgba(232, 101, 43, 0.4);
-        }
-        .bomb-btn:active { background: #e8652b; }
-        @media (max-width: 768px) {
-            #mobileControls { display: block; }
-        }
     </style>
 </head>
 <body>
@@ -84,10 +57,7 @@
 
     <canvas id="gameCanvas"></canvas>
 
-    <div id="mobileControls">
-        <button class="bomb-btn" id="bombBtn">EMP 核爆</button>
-    </div>
-
+    <script src="../shared/touch-controller.js"></script>
     <script>
         // Web Audio 合成器 (免外部音频资产)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -182,8 +152,14 @@
             touchX = t.clientX - canvas.getBoundingClientRect().left;
             touchY = t.clientY - canvas.getBoundingClientRect().top;
         }, { passive: true });
-        canvas.addEventListener('touchend', () => { touchX = null; touchY = null; });
-        document.getElementById('bombBtn').addEventListener('click', useBomb);
+        TouchController.init({
+            buttons: [
+                { id: 'bomb', label: '💣 EMP', key: 'b', code: 'KeyB', class: 'accent' }
+            ],
+            onAction: (action, isPressed) => {
+                if (isPressed && action === 'bomb') useBomb();
+            }
+        });
 
         // 玩家战机
         const player = {

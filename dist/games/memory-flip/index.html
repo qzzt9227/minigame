@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>记忆翻牌</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #08080c;
+            color: #fff;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 10px;
+        }
+        .top-nav {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid #333;
+            color: #00c8ff;
+            padding: 8px 16px;
+            clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #00c8ff; color: #08080c; }
+        .nav-btn.secondary { color: #888; }
+        .nav-btn.secondary:hover { background: #333; color: #fff; }
+
+        .game-panel {
+            background: #10121b;
+            border: 2px solid #222638;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 0 35px rgba(0, 200, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 45px;
+        }
+        .info-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            background: #161a29;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #282f48;
+        }
+        .info-item {
+            font-size: 15px;
+            font-weight: 700;
+            color: #00c8ff;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 76px);
+            grid-template-rows: repeat(4, 76px);
+            gap: 12px;
+            perspective: 1000px;
+        }
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease-in-out;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card.matched {
+            transform: rotateY(180deg) scale(0.95);
+            pointer-events: none;
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+            border: 1.5px solid #283048;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .card-front {
+            background: #181d2c;
+            color: #00c8ff;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .card-front:hover {
+            border-color: #00c8ff;
+            background: #20273a;
+        }
+        .card-back {
+            background: #101c2e;
+            border-color: #00ff9d;
+            color: #fff;
+            font-size: 32px;
+            transform: rotateY(180deg);
+        }
+        .card.matched .card-back {
+            background: #0f2c25;
+            border-color: #00ff9d;
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                grid-template-columns: repeat(4, 64px);
+                grid-template-rows: repeat(4, 64px);
+                gap: 8px;
+            }
+            .card-back { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="nav-btn">← 游戏大厅</a>
+        <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+    </div>
+
+    <div class="game-panel">
+        <div class="info-bar">
+            <div class="info-item" id="movesVal">步数: 0</div>
+            <div class="info-item" id="timerVal" style="color:#f59e0b">时间: 0s</div>
+            <div class="info-item" id="pairsVal" style="color:#00ff9d">配对: 0/8</div>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid"></div>
+    </div>
+
+    <script src="../shared/touch-controller.js"></script>
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(type) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                if (type === 'flip') {
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+                    osc.start(now); osc.stop(now + 0.04);
+                } else if (type === 'match') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.setValueAtTime(780, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.16);
+                    osc.start(now); osc.stop(now + 0.16);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554, now + 0.12);
+                    osc.frequency.setValueAtTime(659, now + 0.24);
+                    osc.frequency.setValueAtTime(880, now + 0.36);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now); osc.stop(now + 0.6);
+                }
+            } catch(e) {}
+        }
+
+        const ICONS = ['🚀', '💎', '⚡', '🕹️', '🔮', '🧬', '🛸', '👾'];
+        let cards = [];
+        let flippedCards = [];
+        let matchedCount = 0;
+        let moves = 0;
+        let timer = 0, timerId = null;
+        let isLock = false;
+
+        const gridEl = document.getElementById('cardsGrid');
+
+        function initGame() {
+            clearInterval(timerId);
+            timer = 0;
+            moves = 0;
+            matchedCount = 0;
+            flippedCards = [];
+            isLock = false;
+            document.getElementById('movesVal').textContent = `步数: 0`;
+            document.getElementById('timerVal').textContent = `时间: 0s`;
+            document.getElementById('pairsVal').textContent = `配对: 0/8`;
+
+            // 双份洗牌
+            cards = [...ICONS, ...ICONS].sort(() => Math.random() - 0.5);
+
+            gridEl.innerHTML = '';
+            cards.forEach((icon, idx) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.idx = idx;
+                card.dataset.icon = icon;
+                card.innerHTML = `
+                    <div class="card-face card-front">?</div>
+                    <div class="card-face card-back">${icon}</div>
+                `;
+                card.addEventListener('click', () => onCardClick(card));
+                gridEl.appendChild(card);
+            });
+
+            timerId = setInterval(() => {
+                timer++;
+                document.getElementById('timerVal').textContent = `时间: ${timer}s`;
+            }, 1000);
+        }
+
+        function onCardClick(card) {
+            if (isLock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+            playSfx('flip');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('movesVal').textContent = `步数: ${moves}`;
+                checkPair();
+            }
+        }
+
+        function checkPair() {
+            const [c1, c2] = flippedCards;
+            if (c1.dataset.icon === c2.dataset.icon) {
+                c1.classList.add('matched');
+                c2.classList.add('matched');
+                matchedCount++;
+                document.getElementById('pairsVal').textContent = `配对: ${matchedCount}/8`;
+                playSfx('match');
+                flippedCards = [];
+
+                if (matchedCount === 8) {
+                    clearInterval(timerId);
+                    playSfx('win');
+                    setTimeout(() => {
+                        alert(`🎉 恭喜通关！耗时 ${timer} 秒，消耗 ${moves} 步。`);
+                    }, 300);
+                }
+            } else {
+                isLock = true;
+                setTimeout(() => {
+                    c1.classList.remove('flipped');
+                    c2.classList.remove('flipped');
+                    flippedCards = [];
+                    isLock = false;
+                }, 750);
+            }
+        }
+
+        TouchController.init({
+            buttons: [
+                { id: 'restart', label: '↻ 洗牌', key: 'r', code: 'KeyR', class: 'accent' }
+            ],
+            onAction: (action, isPressed) => {
+                if (isPressed && action === 'restart') initGame();
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+</html>

@@ -49,31 +49,6 @@
         .nav-btn:hover { background: #00ff9d; color: #08080c; }
         .nav-btn.secondary { color: #888; }
         .nav-btn.secondary:hover { background: #333; color: #fff; }
-        
-        /* 移动端虚拟方向键 */
-        #dpad {
-            margin-top: 16px;
-            display: none;
-            grid-template-columns: repeat(3, 56px);
-            grid-template-rows: repeat(3, 56px);
-            gap: 8px;
-        }
-        .dpad-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 255, 157, 0.3);
-            color: #00ff9d;
-            font-size: 20px;
-            font-weight: 700;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        .dpad-btn:active { background: #00ff9d; color: #06060a; }
-        @media (max-width: 768px) {
-            #dpad { display: grid; }
-        }
     </style>
 </head>
 <body>
@@ -84,18 +59,7 @@
 
     <canvas id="gameCanvas"></canvas>
 
-    <div id="dpad">
-        <div></div>
-        <button class="dpad-btn" data-dir="UP">▲</button>
-        <div></div>
-        <button class="dpad-btn" data-dir="LEFT">◀</button>
-        <div></div>
-        <button class="dpad-btn" data-dir="RIGHT">▶</button>
-        <div></div>
-        <button class="dpad-btn" data-dir="DOWN">▼</button>
-        <div></div>
-    </div>
-
+    <script src="../shared/touch-controller.js"></script>
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playTone(freq, dur, type = 'sine') {
@@ -183,15 +147,8 @@
             if (e.key === 'Enter' && gameState === 'gameover') resetGame();
         });
 
-        document.querySelectorAll('.dpad-btn').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const d = btn.dataset.dir;
-                if (d === 'UP') setDirection(0, -1);
-                if (d === 'DOWN') setDirection(0, 1);
-                if (d === 'LEFT') setDirection(-1, 0);
-                if (d === 'RIGHT') setDirection(1, 0);
-            }, { passive: false });
+        TouchController.init({
+            preset: 'dpad'
         });
 
         canvas.addEventListener('click', () => {

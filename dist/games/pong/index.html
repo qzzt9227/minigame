@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>经典乒乓球</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #08080c;
+            color: #fff;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .top-nav {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid #333;
+            color: #00c8ff;
+            padding: 8px 16px;
+            clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #00c8ff; color: #08080c; }
+        .nav-btn.secondary { color: #888; }
+        .nav-btn.secondary:hover { background: #333; color: #fff; }
+
+        #gameCanvas {
+            background: #09090e;
+            border: 1px solid #1a1a28;
+            box-shadow: 0 0 35px rgba(0, 200, 255, 0.12);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="nav-btn">← 游戏大厅</a>
+        <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="../shared/touch-controller.js"></script>
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, dur) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + dur);
+            } catch(e) {}
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = Math.min(window.innerWidth - 20, 680);
+            canvas.height = Math.min(window.innerHeight - 80, 440);
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const PADDLE_W = 10;
+        const PADDLE_H = 75;
+        const BALL_SIZE = 8;
+        const WIN_SCORE = 7;
+
+        let p1 = { y: 0, score: 0, speed: 6 };
+        let p2 = { y: 0, score: 0, speed: 4.8 };
+        let ball = { x: 0, y: 0, vx: 5, vy: 2, speed: 5 };
+        let gameState = 'playing'; // playing, end
+
+        function resetRound(server = 1) {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speed = 5.5;
+            const angle = (Math.random() - 0.5) * (Math.PI / 3);
+            ball.vx = (server === 1 ? 1 : -1) * ball.speed * Math.cos(angle);
+            ball.vy = ball.speed * Math.sin(angle);
+        }
+
+        function initGame() {
+            p1.y = (canvas.height - PADDLE_H) / 2;
+            p2.y = (canvas.height - PADDLE_H) / 2;
+            p1.score = 0;
+            p2.score = 0;
+            gameState = 'playing';
+            resetRound(1);
+        }
+        initGame();
+
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        // 触屏滑动直接控制挡板位置
+        canvas.addEventListener('touchmove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const touchY = e.touches[0].clientY - rect.top;
+            p1.y = Math.max(0, Math.min(canvas.height - PADDLE_H, touchY - PADDLE_H / 2));
+        }, { passive: true });
+
+        function update() {
+            if (gameState !== 'playing') return;
+
+            // 玩家移动 (W/S 或 上/下键)
+            if (keys['w'] || keys['W'] || keys['ArrowUp']) p1.y -= p1.speed;
+            if (keys['s'] || keys['S'] || keys['ArrowDown']) p1.y += p1.speed;
+            p1.y = Math.max(0, Math.min(canvas.height - PADDLE_H, p1.y));
+
+            // 智能 AI (P2)
+            const targetY = ball.y - PADDLE_H / 2;
+            if (p2.y < targetY - 4) p2.y += p2.speed;
+            else if (p2.y > targetY + 4) p2.y -= p2.speed;
+            p2.y = Math.max(0, Math.min(canvas.height - PADDLE_H, p2.y));
+
+            // 球移动
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // 上下边界反弹
+            if (ball.y - BALL_SIZE <= 0) {
+                ball.y = BALL_SIZE;
+                ball.vy = -ball.vy;
+                playTone(300, 0.04);
+            } else if (ball.y + BALL_SIZE >= canvas.height) {
+                ball.y = canvas.height - BALL_SIZE;
+                ball.vy = -ball.vy;
+                playTone(300, 0.04);
+            }
+
+            // P1 击球检测
+            if (ball.x - BALL_SIZE <= 24 && ball.x + BALL_SIZE >= 14) {
+                if (ball.y >= p1.y && ball.y <= p1.y + PADDLE_H) {
+                    ball.speed = Math.min(12, ball.speed + 0.35);
+                    const hitOffset = (ball.y - (p1.y + PADDLE_H / 2)) / (PADDLE_H / 2);
+                    const angle = hitOffset * (Math.PI / 3);
+                    ball.vx = ball.speed * Math.cos(angle);
+                    ball.vy = ball.speed * Math.sin(angle);
+                    ball.x = 24 + BALL_SIZE;
+                    playTone(450, 0.05);
+                }
+            }
+
+            // P2 击球检测
+            if (ball.x + BALL_SIZE >= canvas.width - 24 && ball.x - BALL_SIZE <= canvas.width - 14) {
+                if (ball.y >= p2.y && ball.y <= p2.y + PADDLE_H) {
+                    ball.speed = Math.min(12, ball.speed + 0.35);
+                    const hitOffset = (ball.y - (p2.y + PADDLE_H / 2)) / (PADDLE_H / 2);
+                    const angle = hitOffset * (Math.PI / 3);
+                    ball.vx = -ball.speed * Math.cos(angle);
+                    ball.vy = ball.speed * Math.sin(angle);
+                    ball.x = canvas.width - 24 - BALL_SIZE;
+                    playTone(400, 0.05);
+                }
+            }
+
+            // 得分判断
+            if (ball.x < -10) {
+                p2.score++;
+                playTone(200, 0.2);
+                if (p2.score >= WIN_SCORE) gameState = 'end';
+                else resetRound(1);
+            } else if (ball.x > canvas.width + 10) {
+                p1.score++;
+                playTone(600, 0.2);
+                if (p1.score >= WIN_SCORE) gameState = 'end';
+                else resetRound(-1);
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#09090e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 中场分割线
+            ctx.strokeStyle = '#1e1e2c';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 得分牌
+            ctx.fillStyle = '#333348';
+            ctx.font = '700 52px Rajdhani';
+            ctx.textAlign = 'center';
+            ctx.fillText(p1.score, canvas.width / 2 - 70, 75);
+            ctx.fillText(p2.score, canvas.width / 2 + 70, 75);
+
+            // 绘制玩家挡板 (P1 - 蓝)
+            ctx.fillStyle = '#00c8ff';
+            ctx.shadowColor = '#00c8ff';
+            ctx.shadowBlur = 10;
+            ctx.fillRect(14, p1.y, PADDLE_W, PADDLE_H);
+
+            // 绘制电脑挡板 (P2 - 橙)
+            ctx.fillStyle = '#e8652b';
+            ctx.shadowColor = '#e8652b';
+            ctx.fillRect(canvas.width - 24, p2.y, PADDLE_W, PADDLE_H);
+
+            // 绘制乒乓球
+            ctx.fillStyle = '#fff';
+            ctx.shadowColor = '#00c8ff';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, BALL_SIZE, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            if (gameState === 'end') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = p1.score >= WIN_SCORE ? '#00ff9d' : '#ff3366';
+                ctx.font = '700 36px Rajdhani';
+                ctx.textAlign = 'center';
+                ctx.fillText(p1.score >= WIN_SCORE ? '你赢了！' : '电脑获胜', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillStyle = '#00c8ff';
+                ctx.font = '500 16px Noto Sans SC';
+                ctx.fillText('点击屏幕重新对局', canvas.width / 2, canvas.height / 2 + 25);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener('click', () => {
+            if (gameState === 'end') initGame();
+        });
+
+        TouchController.init({
+            buttons: [
+                { id: 'up', label: '▲ 向上', key: 'ArrowUp', code: 'ArrowUp' },
+                { id: 'down', label: '▼ 向下', key: 'ArrowDown', code: 'ArrowDown', class: 'accent' }
+            ]
+        });
+
+        loop();
+    </script>
+</body>
+</html>

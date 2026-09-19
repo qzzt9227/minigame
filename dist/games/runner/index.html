@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>无尽酷跑</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #08080c;
+            color: #fff;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .top-nav {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid #333;
+            color: #00c8ff;
+            padding: 8px 16px;
+            clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #00c8ff; color: #08080c; }
+        .nav-btn.secondary { color: #888; }
+        .nav-btn.secondary:hover { background: #333; color: #fff; }
+
+        #gameCanvas {
+            background: #090c13;
+            border: 1px solid #1a2334;
+            box-shadow: 0 0 35px rgba(0, 200, 255, 0.12);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="nav-btn">← 游戏大厅</a>
+        <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="../shared/touch-controller.js"></script>
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(type) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                if (type === 'jump') {
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(750, now + 0.1);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'score') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(580, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                } else if (type === 'crash') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.linearRampToValueAtTime(40, now + 0.35);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now); osc.stop(now + 0.35);
+                }
+            } catch(e) {}
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = Math.min(window.innerWidth - 20, 720);
+            canvas.height = Math.min(window.innerHeight - 60, 360);
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const GROUND_Y = canvas.height - 50;
+        const GRAVITY = 0.55;
+        const JUMP_POWER = -11.5;
+
+        let player = {
+            x: 70, y: GROUND_Y - 40, w: 32, h: 40,
+            vy: 0, isJumping: false, isDucking: false
+        };
+        let obstacles = [];
+        let particles = [];
+        let speed = 6;
+        let distance = 0;
+        let highScore = parseInt(localStorage.getItem('minigame_runner_hi') || '0', 10);
+        let gameState = 'playing'; // playing, gameover
+        let spawnTimer = 0;
+
+        function resetGame() {
+            player.y = GROUND_Y - 40;
+            player.vy = 0;
+            player.isJumping = false;
+            player.isDucking = false;
+            obstacles = [];
+            particles = [];
+            speed = 6;
+            distance = 0;
+            spawnTimer = 0;
+            gameState = 'playing';
+        }
+
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if ((e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') && !player.isJumping && gameState === 'playing') {
+                player.vy = JUMP_POWER;
+                player.isJumping = true;
+                playSfx('jump');
+            }
+            if (e.key === 'Enter' && gameState === 'gameover') resetGame();
+        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        function update() {
+            if (gameState !== 'playing') return;
+
+            distance += Math.floor(speed * 0.1);
+            speed = Math.min(13, 6 + distance / 400);
+
+            if (distance > highScore) {
+                highScore = distance;
+                localStorage.setItem('minigame_runner_hi', highScore);
+            }
+
+            // 下蹲状态
+            player.isDucking = (keys['ArrowDown'] || keys['s'] || keys['S']) && !player.isJumping;
+            player.h = player.isDucking ? 22 : 40;
+
+            // 跳跃物理
+            player.vy += GRAVITY;
+            player.y += player.vy;
+
+            if (player.y >= GROUND_Y - player.h) {
+                player.y = GROUND_Y - player.h;
+                player.vy = 0;
+                player.isJumping = false;
+
+                // 奔跑脚底尘埃粒子
+                if (Math.random() < 0.3) {
+                    particles.push({
+                        x: player.x,
+                        y: GROUND_Y - 2,
+                        vx: -speed * 0.5 + (Math.random() - 0.5),
+                        vy: -Math.random() * 2,
+                        life: 1.0,
+                        color: 'rgba(255,255,255,0.2)'
+                    });
+                }
+            }
+
+            // 生成障碍物
+            spawnTimer++;
+            if (spawnTimer > Math.max(50, 110 - speed * 4)) {
+                spawnTimer = 0;
+                const isFlyer = Math.random() < 0.35;
+                if (isFlyer) {
+                    // 低空飞鸟障碍（下蹲可躲过）
+                    obstacles.push({
+                        x: canvas.width,
+                        y: GROUND_Y - 38,
+                        w: 28,
+                        h: 18,
+                        type: 'bird'
+                    });
+                } else {
+                    // 地面障碍（跳跃躲过）
+                    obstacles.push({
+                        x: canvas.width,
+                        y: GROUND_Y - 36,
+                        w: 22,
+                        h: 36,
+                        type: 'cactus'
+                    });
+                }
+            }
+
+            // 移动障碍物与碰撞检测
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.x -= speed;
+
+                // AABB 碰撞检测
+                if (player.x + player.w > obs.x + 4 &&
+                    player.x + 4 < obs.x + obs.w &&
+                    player.y + player.h > obs.y + 4 &&
+                    player.y + 4 < obs.y + obs.h) {
+                    gameState = 'gameover';
+                    playSfx('crash');
+                }
+
+                if (obs.x + obs.w < -10) obstacles.splice(i, 1);
+            }
+
+            // 更新粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.04;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#090c13';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制地面
+            ctx.fillStyle = '#162032';
+            ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+            ctx.fillStyle = '#00c8ff';
+            ctx.fillRect(0, GROUND_Y, canvas.width, 2);
+
+            // 绘制粒子
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 3, 3);
+            });
+            ctx.globalAlpha = 1.0;
+
+            // 绘制玩家
+            ctx.fillStyle = '#00ff9d';
+            ctx.shadowColor = '#00ff9d';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.shadowBlur = 0;
+
+            // 眼睛
+            ctx.fillStyle = '#08080c';
+            ctx.fillRect(player.x + player.w - 8, player.y + 6, 4, 4);
+
+            // 绘制障碍物
+            obstacles.forEach(obs => {
+                if (obs.type === 'cactus') {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.shadowColor = '#ef4444';
+                    ctx.shadowBlur = 8;
+                    ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                } else {
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x, obs.y + obs.h / 2);
+                    ctx.lineTo(obs.x + obs.w, obs.y);
+                    ctx.lineTo(obs.x + obs.w - 6, obs.y + obs.h);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+            });
+
+            // 顶部 HUD
+            ctx.fillStyle = '#fff';
+            ctx.font = '700 20px Rajdhani';
+            ctx.textAlign = 'left';
+            ctx.fillText(`距离: ${distance} m`, 20, 32);
+            ctx.textAlign = 'right';
+            ctx.fillText(`最高纪录: ${highScore} m`, canvas.width - 20, 32);
+
+            if (gameState === 'gameover') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ef4444';
+                ctx.font = '700 32px Rajdhani';
+                ctx.textAlign = 'center';
+                ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2 - 25);
+                ctx.fillStyle = '#fff';
+                ctx.font = '600 18px Rajdhani';
+                ctx.fillText(`本次奔跑距离: ${distance} m`, canvas.width / 2, canvas.height / 2 + 10);
+                ctx.fillStyle = '#00c8ff';
+                ctx.font = '500 15px Noto Sans SC';
+                ctx.fillText('点击屏幕重新起跑', canvas.width / 2, canvas.height / 2 + 45);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener('click', () => {
+            if (gameState === 'gameover') resetGame();
+        });
+
+        TouchController.init({
+            buttons: [
+                { id: 'jump', label: '⬆ 跳跃', key: ' ', code: 'Space', class: 'accent' },
+                { id: 'duck', label: '⬇ 下蹲', key: 'ArrowDown', code: 'ArrowDown', class: 'secondary' }
+            ]
+        });
+
+        loop();
+    </script>
+</body>
+</html>

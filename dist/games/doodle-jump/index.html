@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>涂鸦跳跃</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #08080c;
+            color: #fff;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .top-nav {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid #333;
+            color: #00c8ff;
+            padding: 8px 16px;
+            clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #00c8ff; color: #08080c; }
+        .nav-btn.secondary { color: #888; }
+        .nav-btn.secondary:hover { background: #333; color: #fff; }
+
+        #gameCanvas {
+            background: #0b0e14;
+            border: 1px solid #1a2332;
+            box-shadow: 0 0 35px rgba(0, 200, 255, 0.15);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="nav-btn">← 游戏大厅</a>
+        <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="../shared/touch-controller.js"></script>
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(type) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                if (type === 'jump') {
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.1);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'spring') {
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(1100, now + 0.25);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'fall') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(250, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                }
+            } catch(e) {}
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = Math.min(window.innerWidth - 20, 420);
+            canvas.height = Math.min(window.innerHeight - 40, 640);
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const GRAVITY = 0.28;
+        const JUMP_FORCE = -8.8;
+        const PLAT_W = 68;
+        const PLAT_H = 12;
+
+        let player = { x: 200, y: 400, vx: 0, vy: 0, r: 16 };
+        let platforms = [];
+        let springs = [];
+        let score = 0;
+        let maxHeight = 0;
+        let highScore = parseInt(localStorage.getItem('minigame_doodle_hi') || '0', 10);
+        let gameState = 'playing'; // playing, gameover
+
+        function resetGame() {
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 120;
+            player.vx = 0;
+            player.vy = JUMP_FORCE;
+            score = 0;
+            maxHeight = 0;
+            gameState = 'playing';
+
+            platforms = [];
+            springs = [];
+
+            // 第一块落脚平台
+            platforms.push({ x: canvas.width / 2 - PLAT_W / 2, y: canvas.height - 70, type: 'normal' });
+
+            for (let y = canvas.height - 140; y > 0; y -= 60) {
+                spawnPlatform(y);
+            }
+        }
+
+        function spawnPlatform(y) {
+            const x = Math.random() * (canvas.width - PLAT_W);
+            const rand = Math.random();
+            let type = 'normal';
+            if (rand < 0.2) type = 'moving';
+            else if (rand < 0.3) type = 'broken';
+
+            const p = { x, y, type, vx: type === 'moving' ? (Math.random() < 0.5 ? 1.5 : -1.5) : 0 };
+            platforms.push(p);
+
+            // 15% 几率刷出弹簧
+            if (type === 'normal' && Math.random() < 0.15) {
+                springs.push({ x: x + PLAT_W / 2 - 8, y: y - 10, w: 16, h: 10, parent: p });
+            }
+        }
+
+        resetGame();
+
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        function update() {
+            if (gameState !== 'playing') return;
+
+            // 水平移动
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -5.5;
+            else if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = 5.5;
+            else player.vx *= 0.8;
+
+            player.x += player.vx;
+
+            // 屏幕边缘穿越
+            if (player.x < -player.r) player.x = canvas.width + player.r;
+            else if (player.x > canvas.width + player.r) player.x = -player.r;
+
+            // 垂直物理
+            player.vy += GRAVITY;
+            player.y += player.vy;
+
+            // 移动平台
+            platforms.forEach(p => {
+                if (p.type === 'moving') {
+                    p.x += p.vx;
+                    if (p.x <= 0 || p.x + PLAT_W >= canvas.width) p.vx = -p.vx;
+                }
+            });
+
+            // 弹簧随平台动
+            springs.forEach(s => {
+                s.x = s.parent.x + PLAT_W / 2 - 8;
+                s.y = s.parent.y - 10;
+            });
+
+            // 下落碰撞检测（仅在向下掉落时有效）
+            if (player.vy > 0) {
+                // 弹簧检测
+                springs.forEach(s => {
+                    if (player.x + player.r > s.x && player.x - player.r < s.x + s.w) {
+                        if (player.y + player.r >= s.y && player.y + player.r <= s.y + 12) {
+                            player.vy = -14.5; // 超级大跳
+                            playSfx('spring');
+                        }
+                    }
+                });
+
+                // 平台踩踏检测
+                platforms.forEach(p => {
+                    if (player.x + player.r > p.x && player.x - player.r < p.x + PLAT_W) {
+                        if (player.y + player.r >= p.y && player.y + player.r <= p.y + 14) {
+                            if (p.type !== 'broken') {
+                                player.vy = JUMP_FORCE;
+                                playSfx('jump');
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 镜头跟随（玩家升过屏幕一半时，场景整体下移）
+            if (player.y < canvas.height / 2) {
+                const diff = (canvas.height / 2) - player.y;
+                player.y = canvas.height / 2;
+                maxHeight += Math.floor(diff);
+                score = maxHeight;
+
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('minigame_doodle_hi', highScore);
+                }
+
+                // 平台与弹簧整体下移
+                platforms.forEach(p => p.y += diff);
+                springs.forEach(s => s.y += diff);
+
+                // 移出底部的平台清理并从上方补新
+                platforms = platforms.filter(p => p.y < canvas.height + 20);
+                springs = springs.filter(s => s.y < canvas.height + 20);
+
+                const topY = platforms.reduce((min, p) => Math.min(min, p.y), canvas.height);
+                if (topY > 60) {
+                    spawnPlatform(topY - 60);
+                }
+            }
+
+            // 掉落死亡
+            if (player.y > canvas.height + 30) {
+                gameState = 'gameover';
+                playSfx('fall');
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0b0e14';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 背景细网格
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            for (let y = 0; y < canvas.height; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // 绘制平台
+            platforms.forEach(p => {
+                if (p.type === 'normal') {
+                    ctx.fillStyle = '#10b981';
+                } else if (p.type === 'moving') {
+                    ctx.fillStyle = '#00c8ff';
+                } else if (p.type === 'broken') {
+                    ctx.fillStyle = '#78350f';
+                }
+                ctx.fillRect(p.x, p.y, PLAT_W, PLAT_H);
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.fillRect(p.x, p.y, PLAT_W, 2);
+            });
+
+            // 绘制弹簧
+            springs.forEach(s => {
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(s.x, s.y, s.w, s.h);
+            });
+
+            // 绘制玩家小球
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 眼睛
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            const lookDir = player.vx >= 0 ? 3 : -3;
+            ctx.arc(player.x + lookDir - 4, player.y - 4, 3, 0, Math.PI * 2);
+            ctx.arc(player.x + lookDir + 4, player.y - 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 顶部分数 HUD
+            ctx.fillStyle = '#fff';
+            ctx.font = '700 22px Rajdhani';
+            ctx.textAlign = 'left';
+            ctx.fillText(`高度: ${score}`, 16, 32);
+            ctx.textAlign = 'right';
+            ctx.fillText(`最高: ${highScore}`, canvas.width - 16, 32);
+
+            if (gameState === 'gameover') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ef4444';
+                ctx.font = '700 32px Rajdhani';
+                ctx.textAlign = 'center';
+                ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2 - 30);
+                ctx.fillStyle = '#fff';
+                ctx.font = '600 20px Rajdhani';
+                ctx.fillText(`攀升高度: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
+                ctx.fillStyle = '#00ff9d';
+                ctx.font = '500 15px Noto Sans SC';
+                ctx.fillText('轻触屏幕重新攀登', canvas.width / 2, canvas.height / 2 + 50);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener('click', () => {
+            if (gameState === 'gameover') resetGame();
+        });
+
+        TouchController.init({
+            preset: 'lr-action'
+        });
+
+        loop();
+    </script>
+</body>
+</html>

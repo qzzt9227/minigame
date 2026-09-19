@@ -58,6 +58,7 @@
 
     <canvas id="gameCanvas"></canvas>
 
+    <script src="../shared/touch-controller.js"></script>
     <script>
         // Web Audio 音效合成
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -439,6 +440,13 @@
             draw();
             requestAnimationFrame(loop);
         }
+        TouchController.init({
+            preset: 'lr-action',
+            buttons: [
+                { id: 'launch', label: '发球', key: ' ', code: 'Space', class: 'accent' }
+            ]
+        });
+
         loop();
     </script>
 </body>

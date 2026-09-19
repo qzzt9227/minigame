@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>经典扫雷</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            background: #08080c;
+            color: #fff;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 10px;
+        }
+        .top-nav {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(18, 18, 24, 0.85);
+            border: 1px solid #333;
+            color: #00c8ff;
+            padding: 8px 16px;
+            clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #00c8ff; color: #08080c; }
+        .nav-btn.secondary { color: #888; }
+        .nav-btn.secondary:hover { background: #333; color: #fff; }
+
+        .game-panel {
+            background: #0f1118;
+            border: 2px solid #202434;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 0 35px rgba(0, 200, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 45px;
+        }
+        .control-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #151824;
+            border: 1px solid #24293e;
+            border-radius: 6px;
+            padding: 8px 14px;
+            margin-bottom: 14px;
+        }
+        .status-digit {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ef4444;
+            font-family: monospace;
+            background: #090a10;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 50px;
+            text-align: center;
+        }
+        .face-btn {
+            background: #202436;
+            border: 1px solid #383e58;
+            color: #ffcc00;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+        .face-btn:active { transform: scale(0.92); }
+
+        .difficulty-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+        .diff-btn {
+            background: #181c2b;
+            border: 1px solid #2c334d;
+            color: #888;
+            padding: 4px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .diff-btn.active {
+            background: #00c8ff;
+            color: #08080c;
+            border-color: #00c8ff;
+        }
+
+        .touch-mode-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .mode-toggle-btn {
+            background: #181c2b;
+            border: 1.5px solid #2c334d;
+            color: #bbb;
+            padding: 6px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+        .mode-toggle-btn.active {
+            background: #00ff9d;
+            color: #090a10;
+            border-color: #00ff9d;
+            box-shadow: 0 0 12px rgba(0, 255, 157, 0.4);
+        }
+
+        .mine-grid {
+            display: grid;
+            gap: 2px;
+            background: #181c2b;
+            border: 2px solid #282f48;
+            padding: 4px;
+            border-radius: 6px;
+        }
+        .cell {
+            width: 32px;
+            height: 32px;
+            background: #252b40;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .cell:hover { background: #323a56; }
+        .cell.revealed {
+            background: #111420;
+            cursor: default;
+        }
+        .cell.mine {
+            background: #ef4444 !important;
+            color: #fff;
+        }
+        .c-1 { color: #38bdf8; }
+        .c-2 { color: #4ade80; }
+        .c-3 { color: #f87171; }
+        .c-4 { color: #c084fc; }
+        .c-5 { color: #fb923c; }
+        .c-6 { color: #2dd4bf; }
+        .c-7 { color: #e879f9; }
+        .c-8 { color: #facc15; }
+
+        @media (max-width: 500px) {
+            .cell { width: 28px; height: 28px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../index.html" class="nav-btn">← 游戏大厅</a>
+        <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+    </div>
+
+    <div class="game-panel">
+        <div class="difficulty-bar">
+            <button class="diff-btn active" onclick="setDiff('easy')">初级 9x9 (10雷)</button>
+            <button class="diff-btn" onclick="setDiff('medium')">中级 16x16 (40雷)</button>
+        </div>
+
+        <div class="control-bar">
+            <div class="status-digit" id="mineCount">010</div>
+            <button class="face-btn" id="faceBtn" onclick="initBoard()">🙂</button>
+            <div class="status-digit" id="timer">000</div>
+        </div>
+
+        <div class="touch-mode-bar">
+            <button class="mode-toggle-btn active" id="btnDig" onclick="setTouchMode('dig')">⛏️ 挖掘模式</button>
+            <button class="mode-toggle-btn" id="btnFlag" onclick="setTouchMode('flag')">🚩 插旗模式</button>
+        </div>
+
+        <div class="mine-grid" id="mineGrid"></div>
+    </div>
+
+    <script src="../shared/touch-controller.js"></script>
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(450, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.03);
+                    osc.start(now); osc.stop(now + 0.03);
+                } else if (type === 'flag') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(700, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
+                } else if (type === 'boom') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.35);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now); osc.stop(now + 0.35);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.setValueAtTime(659, now + 0.1);
+                    osc.frequency.setValueAtTime(783, now + 0.2);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now); osc.stop(now + 0.35);
+                }
+            } catch(e) {}
+        }
+
+        let ROWS = 9, COLS = 9, MINES = 10;
+        let board = [];
+        let firstClick = true;
+        let gameOver = false;
+        let timer = 0, timerId = null;
+        let touchMode = 'dig'; // 'dig' or 'flag'
+
+        const gridEl = document.getElementById('mineGrid');
+        const mineCountEl = document.getElementById('mineCount');
+        const timerEl = document.getElementById('timer');
+        const faceBtn = document.getElementById('faceBtn');
+
+        function setDiff(level) {
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            if (level === 'easy') {
+                ROWS = 9; COLS = 9; MINES = 10;
+                document.querySelectorAll('.diff-btn')[0].classList.add('active');
+            } else {
+                ROWS = 16; COLS = 16; MINES = 40;
+                document.querySelectorAll('.diff-btn')[1].classList.add('active');
+            }
+            initBoard();
+        }
+
+        function setTouchMode(m) {
+            touchMode = m;
+            document.getElementById('btnDig').classList.toggle('active', m === 'dig');
+            document.getElementById('btnFlag').classList.toggle('active', m === 'flag');
+        }
+
+        function initBoard() {
+            clearInterval(timerId);
+            timer = 0;
+            timerEl.textContent = '000';
+            firstClick = true;
+            gameOver = false;
+            faceBtn.textContent = '🙂';
+            mineCountEl.textContent = String(MINES).padStart(3, '0');
+
+            board = [];
+            gridEl.style.gridTemplateColumns = `repeat(${COLS}, auto)`;
+            gridEl.innerHTML = '';
+
+            for (let r = 0; r < ROWS; r++) {
+                board[r] = [];
+                for (let c = 0; c < COLS; c++) {
+                    board[r][c] = { mine: false, count: 0, revealed: false, flagged: false };
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+
+                    // 点击与右击/触控处理
+                    cell.addEventListener('click', (e) => onCellClick(r, c, false));
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        onCellClick(r, c, true);
+                    });
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function plantMines(safeR, safeC) {
+            let planted = 0;
+            while (planted < MINES) {
+                const r = Math.floor(Math.random() * ROWS);
+                const c = Math.floor(Math.random() * COLS);
+                // 确保第一次点击及其九宫格内绝无地雷
+                if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
+                if (!board[r][c].mine) {
+                    board[r][c].mine = true;
+                    planted++;
+                }
+            }
+            // 计算邻域雷数
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c].mine) continue;
+                    let count = 0;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc].mine) {
+                                count++;
+                            }
+                        }
+                    }
+                    board[r][c].count = count;
+                }
+            }
+        }
+
+        function onCellClick(r, c, isRightClick) {
+            if (gameOver) return;
+            const data = board[r][c];
+            if (data.revealed) return;
+
+            const isFlagAction = isRightClick || touchMode === 'flag';
+
+            if (isFlagAction) {
+                data.flagged = !data.flagged;
+                playSound('flag');
+                updateCellDOM(r, c);
+                updateRemainingMines();
+                return;
+            }
+
+            if (data.flagged) return;
+
+            if (firstClick) {
+                firstClick = false;
+                plantMines(r, c);
+                timerId = setInterval(() => {
+                    timer = Math.min(999, timer + 1);
+                    timerEl.textContent = String(timer).padStart(3, '0');
+                }, 1000);
+            }
+
+            if (data.mine) {
+                revealAllMines();
+                gameOver = true;
+                clearInterval(timerId);
+                faceBtn.textContent = '😵';
+                playSound('boom');
+                return;
+            }
+
+            reveal(r, c);
+            playSound('click');
+            checkWin();
+        }
+
+        function reveal(r, c) {
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+            const data = board[r][c];
+            if (data.revealed || data.flagged || data.mine) return;
+
+            data.revealed = true;
+            updateCellDOM(r, c);
+
+            if (data.count === 0) {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr !== 0 || dc !== 0) reveal(r + dr, c + dc);
+                    }
+                }
+            }
+        }
+
+        function updateCellDOM(r, c) {
+            const idx = r * COLS + c;
+            const cell = gridEl.children[idx];
+            const data = board[r][c];
+
+            if (data.revealed) {
+                cell.classList.add('revealed');
+                if (data.count > 0) {
+                    cell.textContent = data.count;
+                    cell.classList.add(`c-${data.count}`);
+                } else {
+                    cell.textContent = '';
+                }
+            } else if (data.flagged) {
+                cell.textContent = '🚩';
+            } else {
+                cell.textContent = '';
+            }
+        }
+
+        function revealAllMines() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const idx = r * COLS + c;
+                    const cell = gridEl.children[idx];
+                    if (board[r][c].mine) {
+                        cell.classList.add('mine');
+                        cell.textContent = '💣';
+                    }
+                }
+            }
+        }
+
+        function updateRemainingMines() {
+            let flags = 0;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c].flagged) flags++;
+                }
+            }
+            mineCountEl.textContent = String(Math.max(-99, MINES - flags)).padStart(3, '0');
+        }
+
+        function checkWin() {
+            let revealedCount = 0;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c].revealed) revealedCount++;
+                }
+            }
+            if (revealedCount === ROWS * COLS - MINES) {
+                gameOver = true;
+                clearInterval(timerId);
+                faceBtn.textContent = '😎';
+                playSound('win');
+            }
+        }
+
+        // 绑定触控快捷切换
+        TouchController.init({
+            buttons: [
+                { id: 'mode', label: '⛏️/🚩 切换', key: 'f', code: 'KeyF', class: 'accent' }
+            ],
+            onAction: (action, isPressed) => {
+                if (isPressed && action === 'mode') {
+                    setTouchMode(touchMode === 'dig' ? 'flag' : 'dig');
+                }
+            }
+        });
+
+        initBoard();
+    </script>
+</body>
+</html>
