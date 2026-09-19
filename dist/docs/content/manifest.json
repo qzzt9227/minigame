@@ -2,7 +2,7 @@
   {
     "id": "welcome",
     "filename": "01-welcome-to-docs.md",
-    "title": "个人文档中心与知识库使用说明",
+    "title": "个人文档中心与 Markdown 知识库",
     "category": "指南",
     "badge": "START",
     "date": "2026-09-19",
@@ -20,7 +20,7 @@
   {
     "id": "touch-controller",
     "filename": "03-touch-controller-api.md",
-    "title": "TouchController 触屏控制器 API 接入",
+    "title": "TouchController 通用移动端虚拟触控控制器 API",
     "category": "开发",
     "badge": "API",
     "date": "2026-09-19",
@@ -29,7 +29,7 @@
   {
     "id": "color-picker",
     "filename": "04-color-picker-guide.md",
-    "title": "ColorPicker 独立调色盘与拾色器指南",
+    "title": "ColorPicker 独立调色盘与光谱拾色器指南",
     "category": "开发",
     "badge": "LIB",
     "date": "2026-09-19",
@@ -38,7 +38,7 @@
   {
     "id": "game-balance",
     "filename": "05-game-balance-and-physics.md",
-    "title": "小游戏物理引擎与手感平衡性调优",
+    "title": "经典小游戏物理引擎与平衡性调优备忘录",
     "category": "游戏",
     "badge": "PHYSICS",
     "date": "2026-09-19",
@@ -47,7 +47,7 @@
   {
     "id": "cloudflare",
     "filename": "06-cloudflare-deployment.md",
-    "title": "Cloudflare Pages 自动化部署与域名绑定",
+    "title": "Cloudflare Pages 静态自动化部署与自定义域名绑定",
     "category": "运维",
     "badge": "OPS",
     "date": "2026-09-19",
@@ -56,7 +56,7 @@
   {
     "id": "markdown-syntax",
     "filename": "07-markdown-syntax-reference.md",
-    "title": "Markdown 排版规范与常用语法速查",
+    "title": "Markdown 常用排版语法与 GitHub 特性速查",
     "category": "参考",
     "badge": "DOC",
     "date": "2026-09-19",
@@ -65,7 +65,7 @@
   {
     "id": "roadmap",
     "filename": "08-project-roadmap.md",
-    "title": "个人数字化工作台未来路线图规划",
+    "title": "个人工作台与小游戏合集未来演进路线图",
     "category": "规划",
     "badge": "PLAN",
     "date": "2026-09-19",

@@ -211,3 +211,10 @@ python -m http.server 8080 -d dist
    - 严禁在每个游戏内部重复写死独立的虚拟十字键或按键 CSS，统一调用 `TouchController.init(...)` 配置。
    - 每个游戏必须提供双向导航返回链（`← 游戏大厅`、`⌂ 导航中枢`）。
    - 音效必须使用 Web Audio API 纯代码实时合成，禁止引入外部大型 mp3/wav 资源。
+5. **MD 文档发现与自动双分支推送铁律 (Mandatory Markdown Sync & Dual-Branch Push Rule)**：
+   - **核心指令**：以后只要在 `dist/docs/content/` 路径下发现新增或修改了 `.md` 文档，一律同步索引并推送到 GitHub 的 `master` 和 `main` 分支。
+   - **自动化工具**：
+     - `npm run sync-docs`：扫描 `dist/docs/content/` 并自动刷新 `manifest.json`。
+     - `npm run push-docs`：刷新索引并立即双推至 `origin master` 和 `origin main`。
+     - `npm run watch-docs`（或双击 `scripts/watch-docs.bat`）：后台守护监听，检测到新 MD 文件时 1.5 秒防抖自动双分支推送。
+   - **代理执行要求**：AI 代理只要检测到 `dist/docs/content/` 有文件变动，必须执行全流程（索引更新 + git commit + push master + push main）。

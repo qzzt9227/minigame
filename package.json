@@ -5,7 +5,10 @@
   "main": "dist/index.html",
   "scripts": {
     "start": "npx serve dist",
-    "build": "echo 'No build needed - pure static architecture'"
+    "build": "echo 'No build needed - pure static architecture'",
+    "sync-docs": "node scripts/sync-docs.js",
+    "push-docs": "node scripts/sync-docs.js --push",
+    "watch-docs": "node scripts/sync-docs.js --watch"
   },
   "repository": {
     "type": "git",
