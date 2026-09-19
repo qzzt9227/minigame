@@ -70,5 +70,14 @@
     "badge": "PLAN",
     "date": "2026-09-19",
     "path": "content/08-project-roadmap.md"
+  },
+  {
+    "id": "science-museum",
+    "filename": "走进科技馆，放飞科技梦.md",
+    "title": "走进科技馆，放飞科技梦",
+    "category": "征文",
+    "badge": "ESSAY",
+    "date": "2026-09-19",
+    "path": "content/走进科技馆，放飞科技梦.md"
   }
 ]

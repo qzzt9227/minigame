@@ -740,6 +740,7 @@
                 <button class="cat-btn" data-cat="运维">运维</button>
                 <button class="cat-btn" data-cat="参考">参考</button>
                 <button class="cat-btn" data-cat="规划">规划</button>
+                <button class="cat-btn" data-cat="征文">征文</button>
             </div>
 
             <div class="search-box">
@@ -871,6 +872,8 @@
             html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
             html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
             html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            html = html.replace(/^题目：\s*(.+)$/gm, '<h1>$1</h1>');
+            html = html.replace(/^参赛组别：\s*(.+)$/gm, '<p style="color:var(--accent); font-weight:600; font-family:var(--font-code); margin-bottom:18px;">🏷️ 参赛组别: $1</p>');
 
             // 分割线
             html = html.replace(/^\s*---\s*$/gim, '<hr>');
@@ -996,7 +999,8 @@
             await Promise.all(documentsList.map(async (doc) => {
                 if (!doc.content) {
                     try {
-                        const r = await fetch(doc.path || `content/${doc.filename}`);
+                        const targetUrl = encodeURI(doc.path || `content/${doc.filename}`);
+                        const r = await fetch(targetUrl);
                         if (r.ok) {
                             doc.content = await r.text();
                         } else {

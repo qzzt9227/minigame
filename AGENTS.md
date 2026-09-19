@@ -35,7 +35,8 @@ minigame-master/
     │       ├── 05-game-balance-and-physics.md  # 游戏物理引擎平衡性调优备忘录
     │       ├── 06-cloudflare-deployment.md     # Cloudflare Pages 自动化部署与域名绑定
     │       ├── 07-markdown-syntax-reference.md # Markdown 常用语法速查
-    │       └── 08-project-roadmap.md           # 个人工作台未来路线图
+    │       ├── 08-project-roadmap.md           # 个人工作台未来路线图
+    │       └── 走进科技馆，放飞科技梦.md       # 高中组科技征文（第一人称散文沉淀）
     └── games/            # 独立小游戏合集目录 (共 16 款)
         ├── index.html    # 游戏大厅 (Arcade Lobby - 分类过滤、即时检索、16 款游戏展示)
         ├── shared/       # 公共模块与工具库
