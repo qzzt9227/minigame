@@ -27,6 +27,7 @@
 
         // 开发者生态
         { id: 'p9', title: 'GitHub', url: 'https://github.com', desc: '全球最大的开源代码托管平台与协作中枢', cat: 'dev', badge: 'GIT', icon: 'GH', clicks: 0 },
+        { id: 'p_doc', title: '文档知识库', url: 'docs/index.html', desc: 'Markdown 知识库与规范中心，直连 GitHub 仓库多选项卡预览', cat: 'dev', badge: 'DOCS', icon: '📚', clicks: 0 },
         { id: 'p10', title: 'Vercel', url: 'https://vercel.com', desc: '全球极速前端与全栈云原生构建与部署平台', cat: 'dev', badge: 'OPS', icon: 'VC', clicks: 0 },
         { id: 'p11', title: 'Stack Overflow', url: 'https://stackoverflow.com', desc: '全球开发者权威疑难技术问答交流社区', cat: 'dev', badge: 'Q&A', icon: 'SO', clicks: 0 },
         { id: 'p12', title: 'MDN Web Docs', url: 'https://developer.mozilla.org', desc: '权威完整的 Web 标准、HTML、CSS、JS 参考', cat: 'dev', badge: 'DOC', icon: 'MD', clicks: 0 },

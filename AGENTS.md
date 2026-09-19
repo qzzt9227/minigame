@@ -24,6 +24,18 @@ minigame-master/
     ├── index.html        # 导航中枢主结构（状态栏、搜索控制台、卡片容器、便签抽屉、弹窗）
     ├── style.css         # 深色高对比度样式、切角多边形、动态微光、响应式媒体查询
     ├── app.js            # 核心业务逻辑（Canvas 网格背景、时钟、多引擎搜索、书签 CRUD、便签持久化）
+    ├── docs/             # 📚 个人文档中心与 Markdown 知识库
+    │   ├── index.html    # 文档中心主结构（多选项卡展示、前3行摘要预览、深度阅读器、GitHub同步）
+    │   └── content/      # 存放具体 MD 文档的指定仓库路径
+    │       ├── manifest.json                  # 文档元数据清单（标题、分类、路径、标签）
+    │       ├── 01-welcome-to-docs.md           # 欢迎与使用说明
+    │       ├── 02-zero-build-architecture.md   # Zero-Build 纯静态架构规范
+    │       ├── 03-touch-controller-api.md      # 触屏控制器 API
+    │       ├── 04-color-picker-guide.md        # 独立调色盘与拾色器指南
+    │       ├── 05-game-balance-and-physics.md  # 游戏物理引擎平衡性调优备忘录
+    │       ├── 06-cloudflare-deployment.md     # Cloudflare Pages 自动化部署与域名绑定
+    │       ├── 07-markdown-syntax-reference.md # Markdown 常用语法速查
+    │       └── 08-project-roadmap.md           # 个人工作台未来路线图
     └── games/            # 独立小游戏合集目录 (共 16 款)
         ├── index.html    # 游戏大厅 (Arcade Lobby - 分类过滤、即时检索、16 款游戏展示)
         ├── shared/       # 公共模块与工具库
@@ -120,7 +132,22 @@ minigame-master/
    - 降低默认过快速度、扩大穿透空隙与球拍长度，大幅提高反应宽容度；
    - 标配自定义弹窗：自由调控飞行速度/初速度、管道间距与空隙、球拍长短与 AI 难度。
 
-### 3.4 视觉层与交互背景
+### 3.4 个人文档中心与 Markdown 知识库 (`dist/docs/index.html`)
+- **设计初衷**：在导航与小游戏合集之外，开辟独立的 Markdown 文档与知识沉淀展示页面，支持对文档进行结构化多选项卡预览与阅读。
+- **数据来源规范**：
+  - 文档严格限定为 `.md` 格式，默认存放于 GitHub 仓库指定路径 `dist/docs/content/`。
+  - 支持双通道获取：本地/相对路径 0ms 秒开读取，以及通过 GitHub API 动态拉取远程仓库提交的新文档。
+  - 支持在 UI 中自由配置 GitHub 仓库源（`owner/repo`、分支、目标路径）。
+- **多选项卡与前 3 行预览展示规则**：
+  - 页面顶部提供自适应卡片式选项卡阵列（Tabs Gallery）。
+  - 核心展示算法自动过滤空行与全分隔线，精准提取每个 `.md` 文档的**前 3 行有效内容**，带代码行号高亮展示在选项卡内。
+  - 选项卡支持即时模糊搜索过滤、分类标签切换，以及活动项霓虹高光反馈。
+- **具体文档深度阅读器**：
+  - 点击任何选项卡即刻激活该文档，主阅读区实时调用内置零依赖 Markdown 引擎渲染完整正文。
+  - 支持代码语法高亮块、表格、任务清单、引用块、行数与字数统计。
+  - 提供一键复制 Markdown 全文、在 GitHub 仓库查看原文件、以及源码与渲染视图自由切换。
+
+### 3.5 视觉层与交互背景
 - **Canvas 节点交互网络** (`#canvasBackground`)：
   - 基于 `requestAnimationFrame` 的轻量节点物理运动与碰撞边缘环绕。
   - 动态计算鼠标距离并绘制弱渐变连线（160px 范围反应）。
