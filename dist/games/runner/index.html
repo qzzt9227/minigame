@@ -35,11 +35,14 @@
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
+            cursor: pointer;
             transition: all 0.2s;
         }
         .nav-btn:hover { background: #00c8ff; color: #08080c; }
         .nav-btn.secondary { color: #888; }
         .nav-btn.secondary:hover { background: #333; color: #fff; }
+        .nav-btn.settings { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+        .nav-btn.settings:hover { background: #f59e0b; color: #08080c; }
 
         #gameCanvas {
             background: #090c13;
@@ -47,17 +50,190 @@
             box-shadow: 0 0 35px rgba(0, 200, 255, 0.12);
             display: block;
         }
+
+        /* 设置弹窗 */
+        .settings-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .settings-dialog {
+            background: #10131e;
+            border: 2px solid #252e46;
+            border-radius: 12px;
+            width: 380px;
+            max-width: 95vw;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 200, 255, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #20283e;
+            padding-bottom: 10px;
+        }
+        .settings-title { font-size: 18px; font-weight: 700; color: #fff; }
+        .settings-close { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+        .settings-close:hover { color: #fff; }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .setting-label { font-size: 13px; color: #889; font-weight: 600; }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .opt-btn {
+            flex: 1;
+            padding: 7px 0;
+            background: #181d2c;
+            border: 1px solid #2c3652;
+            color: #aaa;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .opt-btn:hover { color: #fff; }
+        .opt-btn.active {
+            background: #00c8ff;
+            color: #08080c;
+            border-color: #00c8ff;
+            font-weight: 700;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #141824;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #242c40;
+        }
+        .checkbox-label input { accent-color: #00c8ff; cursor: pointer; }
+
+        .color-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #141824;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #242c40;
+        }
+        .color-name { font-size: 13px; font-weight: 600; color: #ccc; }
+        .color-preview-btn {
+            width: 38px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        .color-preview-btn:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
     <div class="top-nav">
         <a href="../index.html" class="nav-btn">← 游戏大厅</a>
         <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+        <button class="nav-btn settings" onclick="openSettings()">⚙️ 自定义设置</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
+    <!-- 设置弹窗 -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-dialog">
+            <div class="settings-header">
+                <span class="settings-title">⚙️ 跑酷自定义设置</span>
+                <button class="settings-close" onclick="closeSettings()">✕</button>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">基础奔跑速度</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="speed" data-val="4.5" onclick="setSpeed(4.5, this)">慢速</button>
+                    <button class="opt-btn active" data-type="speed" data-val="6.0" onclick="setSpeed(6.0, this)">标准</button>
+                    <button class="opt-btn" data-type="speed" data-val="8.0" onclick="setSpeed(8.0, this)">极速</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">障碍物密集程度</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="density" data-val="120" onclick="setDensity(120, this)">稀疏</button>
+                    <button class="opt-btn active" data-type="density" data-val="80" onclick="setDensity(80, this)">标准</button>
+                    <button class="opt-btn" data-type="density" data-val="55" onclick="setDensity(55, this)">密集</button>
+                    <button class="opt-btn" data-type="density" data-val="40" onclick="setDensity(40, this)">疯狂</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">启用障碍物类型 (勾选生效)</div>
+                <div class="checkbox-grid">
+                    <label class="checkbox-label"><input type="checkbox" id="chk-cactus" checked> 地面尖刺</label>
+                    <label class="checkbox-label"><input type="checkbox" id="chk-double" checked> 连环双尖刺</label>
+                    <label class="checkbox-label"><input type="checkbox" id="chk-drone" checked> 低空无人机</label>
+                    <label class="checkbox-label"><input type="checkbox" id="chk-laser" checked> 浮空激光雷</label>
+                    <label class="checkbox-label"><input type="checkbox" id="chk-wall" checked> 巨石高墙</label>
+                    <label class="checkbox-label"><input type="checkbox" id="chk-saw" checked> 滚动齿轮</label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">色彩自定义 (点击调色盘挑选)</div>
+                <div class="color-row">
+                    <span class="color-name">玩家角色颜色</span>
+                    <div class="color-preview-btn" id="btnPlayerColor" style="background:#00ff9d;"></div>
+                </div>
+                <div class="color-row">
+                    <span class="color-name">地面尖刺/障碍颜色</span>
+                    <div class="color-preview-btn" id="btnGroundColor" style="background:#ef4444;"></div>
+                </div>
+                <div class="color-row">
+                    <span class="color-name">低空飞鸟/无人机颜色</span>
+                    <div class="color-preview-btn" id="btnDroneColor" style="background:#f59e0b;"></div>
+                </div>
+                <div class="color-row">
+                    <span class="color-name">激光雷/高墙颜色</span>
+                    <div class="color-preview-btn" id="btnLaserColor" style="background:#b05bf8;"></div>
+                </div>
+            </div>
+
+            <button class="opt-btn active" style="padding:10px; margin-top:4px;" onclick="saveAndApplySettings()">保存并重新开始</button>
+        </div>
+    </div>
+
     <script src="../shared/touch-controller.js"></script>
+    <script src="../shared/color-picker.js"></script>
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
@@ -74,12 +250,6 @@
                     gain.gain.setValueAtTime(0.12, now);
                     gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
                     osc.start(now); osc.stop(now + 0.1);
-                } else if (type === 'score') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(580, now);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-                    osc.start(now); osc.stop(now + 0.08);
                 } else if (type === 'crash') {
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(160, now);
@@ -105,17 +275,94 @@
         const GRAVITY = 0.55;
         const JUMP_POWER = -11.5;
 
+        // 用户配置存储
+        let userConfig = {
+            baseSpeed: 6.0,
+            spawnInterval: 80,
+            allowedTypes: ['cactus', 'double', 'drone', 'laser', 'wall', 'saw'],
+            colors: {
+                player: '#00ff9d',
+                ground: '#ef4444',
+                drone: '#f59e0b',
+                laser: '#b05bf8'
+            }
+        };
+
+        try {
+            const saved = localStorage.getItem('minigame_runner_settings');
+            if (saved) userConfig = Object.assign(userConfig, JSON.parse(saved));
+        } catch(e) {}
+
+        // 设置面板绑定调色盘
+        document.getElementById('btnPlayerColor').style.background = userConfig.colors.player;
+        document.getElementById('btnGroundColor').style.background = userConfig.colors.ground;
+        document.getElementById('btnDroneColor').style.background = userConfig.colors.drone;
+        document.getElementById('btnLaserColor').style.background = userConfig.colors.laser;
+
+        ColorPicker.attach('#btnPlayerColor', {
+            title: '选择玩家角色颜色',
+            defaultColor: userConfig.colors.player,
+            onChange: (c) => userConfig.colors.player = c
+        });
+        ColorPicker.attach('#btnGroundColor', {
+            title: '选择地面障碍颜色',
+            defaultColor: userConfig.colors.ground,
+            onChange: (c) => userConfig.colors.ground = c
+        });
+        ColorPicker.attach('#btnDroneColor', {
+            title: '选择无人机颜色',
+            defaultColor: userConfig.colors.drone,
+            onChange: (c) => userConfig.colors.drone = c
+        });
+        ColorPicker.attach('#btnLaserColor', {
+            title: '选择激光/高墙颜色',
+            defaultColor: userConfig.colors.laser,
+            onChange: (c) => userConfig.colors.laser = c
+        });
+
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        function setSpeed(v, el) {
+            userConfig.baseSpeed = v;
+            el.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function setDensity(v, el) {
+            userConfig.spawnInterval = v;
+            el.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function saveAndApplySettings() {
+            const types = [];
+            if (document.getElementById('chk-cactus').checked) types.push('cactus');
+            if (document.getElementById('chk-double').checked) types.push('double');
+            if (document.getElementById('chk-drone').checked) types.push('drone');
+            if (document.getElementById('chk-laser').checked) types.push('laser');
+            if (document.getElementById('chk-wall').checked) types.push('wall');
+            if (document.getElementById('chk-saw').checked) types.push('saw');
+
+            userConfig.allowedTypes = types.length > 0 ? types : ['cactus'];
+            localStorage.setItem('minigame_runner_settings', JSON.stringify(userConfig));
+            closeSettings();
+            resetGame();
+        }
+
         let player = {
             x: 70, y: GROUND_Y - 40, w: 32, h: 40,
             vy: 0, isJumping: false, isDucking: false
         };
         let obstacles = [];
         let particles = [];
-        let speed = 6;
+        let speed = userConfig.baseSpeed;
         let distance = 0;
         let highScore = parseInt(localStorage.getItem('minigame_runner_hi') || '0', 10);
-        let gameState = 'playing'; // playing, gameover
+        let gameState = 'playing';
         let spawnTimer = 0;
+        let rollAngle = 0;
 
         function resetGame() {
             player.y = GROUND_Y - 40;
@@ -124,7 +371,7 @@
             player.isDucking = false;
             obstacles = [];
             particles = [];
-            speed = 6;
+            speed = userConfig.baseSpeed;
             distance = 0;
             spawnTimer = 0;
             gameState = 'playing';
@@ -146,14 +393,15 @@
             if (gameState !== 'playing') return;
 
             distance += Math.floor(speed * 0.1);
-            speed = Math.min(13, 6 + distance / 400);
+            speed = Math.min(14, userConfig.baseSpeed + distance / 400);
+            rollAngle += 0.15;
 
             if (distance > highScore) {
                 highScore = distance;
                 localStorage.setItem('minigame_runner_hi', highScore);
             }
 
-            // 下蹲状态
+            // 下蹲控制
             player.isDucking = (keys['ArrowDown'] || keys['s'] || keys['S']) && !player.isJumping;
             player.h = player.isDucking ? 22 : 40;
 
@@ -166,7 +414,7 @@
                 player.vy = 0;
                 player.isJumping = false;
 
-                // 奔跑脚底尘埃粒子
+                // 奔跑尘埃粒子
                 if (Math.random() < 0.3) {
                     particles.push({
                         x: player.x,
@@ -179,38 +427,37 @@
                 }
             }
 
-            // 生成障碍物
+            // 生成多样化障碍物
             spawnTimer++;
-            if (spawnTimer > Math.max(50, 110 - speed * 4)) {
+            const dynamicInterval = Math.max(35, userConfig.spawnInterval - (speed - 6) * 3);
+            if (spawnTimer > dynamicInterval) {
                 spawnTimer = 0;
-                const isFlyer = Math.random() < 0.35;
-                if (isFlyer) {
-                    // 低空飞鸟障碍（下蹲可躲过）
-                    obstacles.push({
-                        x: canvas.width,
-                        y: GROUND_Y - 38,
-                        w: 28,
-                        h: 18,
-                        type: 'bird'
-                    });
-                } else {
-                    // 地面障碍（跳跃躲过）
-                    obstacles.push({
-                        x: canvas.width,
-                        y: GROUND_Y - 36,
-                        w: 22,
-                        h: 36,
-                        type: 'cactus'
-                    });
+                const pool = userConfig.allowedTypes;
+                const type = pool[Math.floor(Math.random() * pool.length)];
+
+                if (type === 'cactus') {
+                    obstacles.push({ x: canvas.width, y: GROUND_Y - 36, w: 22, h: 36, type });
+                } else if (type === 'double') {
+                    obstacles.push({ x: canvas.width, y: GROUND_Y - 36, w: 42, h: 36, type });
+                } else if (type === 'wall') {
+                    obstacles.push({ x: canvas.width, y: GROUND_Y - 50, w: 28, h: 50, type });
+                } else if (type === 'drone') {
+                    // 低空无人机（必须下蹲钻过去）
+                    obstacles.push({ x: canvas.width, y: GROUND_Y - 38, w: 32, h: 18, type });
+                } else if (type === 'laser') {
+                    // 中空浮空地雷（高度在半空中）
+                    obstacles.push({ x: canvas.width, y: GROUND_Y - 72, w: 26, h: 26, type });
+                } else if (type === 'saw') {
+                    // 地面滚动锯齿
+                    obstacles.push({ x: canvas.width, y: GROUND_Y - 28, w: 28, h: 28, type });
                 }
             }
 
-            // 移动障碍物与碰撞检测
+            // 障碍物碰撞检测
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 const obs = obstacles[i];
                 obs.x -= speed;
 
-                // AABB 碰撞检测
                 if (player.x + player.w > obs.x + 4 &&
                     player.x + 4 < obs.x + obs.w &&
                     player.y + player.h > obs.y + 4 &&
@@ -219,7 +466,7 @@
                     playSfx('crash');
                 }
 
-                if (obs.x + obs.w < -10) obstacles.splice(i, 1);
+                if (obs.x + obs.w < -20) obstacles.splice(i, 1);
             }
 
             // 更新粒子
@@ -250,36 +497,52 @@
             });
             ctx.globalAlpha = 1.0;
 
-            // 绘制玩家
-            ctx.fillStyle = '#00ff9d';
-            ctx.shadowColor = '#00ff9d';
+            // 绘制玩家 (使用调色盘选中的颜色)
+            ctx.fillStyle = userConfig.colors.player;
+            ctx.shadowColor = userConfig.colors.player;
             ctx.shadowBlur = 8;
             ctx.fillRect(player.x, player.y, player.w, player.h);
             ctx.shadowBlur = 0;
 
-            // 眼睛
+            // 玩家眼睛
             ctx.fillStyle = '#08080c';
             ctx.fillRect(player.x + player.w - 8, player.y + 6, 4, 4);
 
-            // 绘制障碍物
+            // 绘制多样化障碍物
             obstacles.forEach(obs => {
                 if (obs.type === 'cactus') {
-                    ctx.fillStyle = '#ef4444';
-                    ctx.shadowColor = '#ef4444';
-                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = userConfig.colors.ground;
                     ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                } else {
-                    ctx.fillStyle = '#f59e0b';
-                    ctx.shadowColor = '#f59e0b';
-                    ctx.shadowBlur = 8;
+                } else if (obs.type === 'double') {
+                    ctx.fillStyle = userConfig.colors.ground;
+                    ctx.fillRect(obs.x, obs.y, 18, obs.h);
+                    ctx.fillRect(obs.x + 22, obs.y, 18, obs.h);
+                } else if (obs.type === 'wall') {
+                    ctx.fillStyle = userConfig.colors.laser;
+                    ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.fillRect(obs.x + 2, obs.y + 2, obs.w - 4, 4);
+                } else if (obs.type === 'drone') {
+                    ctx.fillStyle = userConfig.colors.drone;
                     ctx.beginPath();
                     ctx.moveTo(obs.x, obs.y + obs.h / 2);
                     ctx.lineTo(obs.x + obs.w, obs.y);
-                    ctx.lineTo(obs.x + obs.w - 6, obs.y + obs.h);
+                    ctx.lineTo(obs.x + obs.w - 8, obs.y + obs.h);
                     ctx.closePath();
                     ctx.fill();
+                } else if (obs.type === 'laser') {
+                    ctx.fillStyle = userConfig.colors.laser;
+                    ctx.beginPath();
+                    ctx.arc(obs.x + obs.w/2, obs.y + obs.h/2, obs.w/2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (obs.type === 'saw') {
+                    ctx.save();
+                    ctx.translate(obs.x + obs.w/2, obs.y + obs.h/2);
+                    ctx.rotate(rollAngle);
+                    ctx.fillStyle = userConfig.colors.ground;
+                    ctx.fillRect(-obs.w/2, -obs.h/2, obs.w, obs.h);
+                    ctx.restore();
                 }
-                ctx.shadowBlur = 0;
             });
 
             // 顶部 HUD

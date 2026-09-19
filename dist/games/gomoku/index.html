@@ -54,6 +54,35 @@
             align-items: center;
             margin-top: 45px;
         }
+
+        .options-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .select-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .select-label {
+            font-size: 12px;
+            color: #889;
+        }
+        .custom-select {
+            background: #161a29;
+            border: 1px solid #282f48;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            outline: none;
+        }
+
         .info-bar {
             width: 100%;
             display: flex;
@@ -94,6 +123,16 @@
             transition: all 0.15s;
         }
         .action-btn:hover { background: #00c8ff; color: #08080c; }
+        .action-btn.confirm-btn {
+            background: #00ff9d;
+            color: #08080c;
+            border-color: #00ff9d;
+            font-weight: 700;
+            display: none;
+        }
+        .action-btn.confirm-btn:hover {
+            box-shadow: 0 0 12px rgba(0, 255, 157, 0.5);
+        }
 
         #boardCanvas {
             background: #1b1916;
@@ -102,6 +141,19 @@
             box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
             display: block;
             touch-action: none;
+            cursor: crosshair;
+        }
+
+        .control-dock {
+            margin-top: 12px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mode-hint {
+            font-size: 12px;
+            color: #778;
         }
     </style>
 </head>
@@ -112,18 +164,46 @@
     </div>
 
     <div class="game-panel">
+        <div class="options-row">
+            <div class="select-group">
+                <span class="select-label">AI 难度:</span>
+                <select class="custom-select" id="aiDiffSelect" onchange="changeDiff()">
+                    <option value="easy">入门简单</option>
+                    <option value="normal" selected>经典适中</option>
+                    <option value="hard">宗师高难</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <span class="select-label">先后手:</span>
+                <select class="custom-select" id="orderSelect" onchange="changeOrder()">
+                    <option value="player" selected>玩家执黑先手</option>
+                    <option value="ai">电脑执黑先手</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label style="font-size:12px; color:#889; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                    <input type="checkbox" id="confirmModeChk" checked onchange="toggleConfirmMode()"> 防误触二次确认
+                </label>
+            </div>
+        </div>
+
         <div class="info-bar">
             <div class="turn-text">
                 <span class="turn-dot" id="turnDot" style="background:#111; border: 1px solid #666;"></span>
-                <span id="turnLabel">黑方执棋 (玩家)</span>
+                <span id="turnLabel">黑方执棋 (你的回合)</span>
             </div>
             <div class="btn-group">
-                <button class="action-btn" onclick="undoMove()">悔棋</button>
-                <button class="action-btn" onclick="initGame()">重新对弈</button>
+                <button class="action-btn confirm-btn" id="btnConfirmMove" onclick="confirmPreviewMove()">✔ 确认落子</button>
+                <button class="action-btn" onclick="undoMove()">↩ 悔棋</button>
+                <button class="action-btn" onclick="initGame()">↻ 重开</button>
             </div>
         </div>
 
         <canvas id="boardCanvas"></canvas>
+
+        <div class="control-dock">
+            <div class="mode-hint" id="modeHint">提示：轻触棋盘预览落子点，点击确认或再次轻触即可落子</div>
+        </div>
     </div>
 
     <script src="../shared/touch-controller.js"></script>
@@ -163,46 +243,78 @@
 
         let board = [];
         let history = [];
-        let currentTurn = 1; // 1: 玩家(黑), 2: 电脑(白)
-        let winner = 0; // 0: 进行中, 1: 黑胜, 2: 白胜, 3: 平局
+        let currentTurn = 1; // 1: 黑, 2: 白
+        let playerColor = 1; // 1: 玩家黑, 2: 玩家白
+        let winner = 0;
+        let previewPos = null; // 准星预选位置 { r, c }
+        let confirmMode = true;
+        let aiDifficulty = 'normal';
 
         function initGame() {
             board = Array.from({ length: GRID }, () => Array(GRID).fill(0));
             history = [];
             currentTurn = 1;
             winner = 0;
+            previewPos = null;
+            document.getElementById('btnConfirmMove').style.display = 'none';
             updateStatus();
+            draw();
+
+            // 若电脑执黑先手
+            if (playerColor === 2) {
+                setTimeout(aiMove, 300);
+            }
+        }
+
+        function changeDiff() {
+            aiDifficulty = document.getElementById('aiDiffSelect').value;
+        }
+
+        function changeOrder() {
+            playerColor = document.getElementById('orderSelect').value === 'player' ? 1 : 2;
+            initGame();
+        }
+
+        function toggleConfirmMode() {
+            confirmMode = document.getElementById('confirmModeChk').checked;
+            previewPos = null;
+            document.getElementById('btnConfirmMove').style.display = 'none';
+            document.getElementById('modeHint').textContent = confirmMode 
+                ? '提示：轻触棋盘预览落子点，点击确认或再次轻触即可落子' 
+                : '提示：直接点击落子模式已开启';
             draw();
         }
 
         function updateStatus() {
             const turnDot = document.getElementById('turnDot');
             const turnLabel = document.getElementById('turnLabel');
+            const isPlayerTurn = currentTurn === playerColor;
+
             if (winner === 1) {
-                turnLabel.textContent = '🎉 黑方获胜！';
+                turnLabel.textContent = playerColor === 1 ? '🎉 黑方 (你) 获胜！' : '🤖 黑方 (电脑) 获胜！';
                 turnDot.style.background = '#111';
             } else if (winner === 2) {
-                turnLabel.textContent = '🤖 白方 (电脑) 获胜！';
+                turnLabel.textContent = playerColor === 2 ? '🎉 白方 (你) 获胜！' : '🤖 白方 (电脑) 获胜！';
                 turnDot.style.background = '#fff';
             } else if (winner === 3) {
                 turnLabel.textContent = '平局！';
             } else {
-                if (currentTurn === 1) {
-                    turnLabel.textContent = '黑方执棋 (你的回合)';
-                    turnDot.style.background = '#111';
+                if (isPlayerTurn) {
+                    turnLabel.textContent = `${currentTurn === 1 ? '黑方' : '白方'}执棋 (你的回合)`;
+                    turnDot.style.background = currentTurn === 1 ? '#111' : '#fff';
                 } else {
-                    turnLabel.textContent = '白方执棋 (思考中...)';
-                    turnDot.style.background = '#fff';
+                    turnLabel.textContent = `${currentTurn === 1 ? '黑方' : '白方'}执棋 (电脑思考中...)`;
+                    turnDot.style.background = currentTurn === 1 ? '#111' : '#fff';
                 }
             }
         }
 
         function checkWin(r, c, color) {
             const dirs = [
-                [[0, 1], [0, -1]],   // 水平
-                [[1, 0], [-1, 0]],   // 垂直
-                [[1, 1], [-1, -1]],  // 主对角
-                [[1, -1], [-1, 1]]   // 副对角
+                [[0, 1], [0, -1]],
+                [[1, 0], [-1, 0]],
+                [[1, 1], [-1, -1]],
+                [[1, -1], [-1, 1]]
             ];
 
             for (const d of dirs) {
@@ -210,9 +322,7 @@
                 for (const [dr, dc] of d) {
                     let nr = r + dr, nc = c + dc;
                     while (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === color) {
-                        count++;
-                        nr += dr;
-                        nc += dc;
+                        count++; nr += dr; nc += dc;
                     }
                 }
                 if (count >= 5) return true;
@@ -226,6 +336,8 @@
             board[r][c] = currentTurn;
             history.push({ r, c, turn: currentTurn });
             playTone(currentTurn === 1 ? 400 : 550, 0.06);
+            previewPos = null;
+            document.getElementById('btnConfirmMove').style.display = 'none';
 
             if (checkWin(r, c, currentTurn)) {
                 winner = currentTurn;
@@ -245,22 +357,48 @@
             updateStatus();
             draw();
 
-            // 如果轮到电脑回合
-            if (currentTurn === 2 && winner === 0) {
-                setTimeout(aiMove, 250);
+            if (currentTurn !== playerColor && winner === 0) {
+                setTimeout(aiMove, 260);
+            }
+        }
+
+        function confirmPreviewMove() {
+            if (previewPos && currentTurn === playerColor && winner === 0) {
+                placePiece(previewPos.r, previewPos.c);
+            }
+        }
+
+        function handleBoardClick(r, c) {
+            if (currentTurn !== playerColor || winner !== 0) return;
+            if (r < 0 || r >= GRID || c < 0 || c >= GRID || board[r][c] !== 0) return;
+
+            if (!confirmMode) {
+                // 直接落子模式
+                placePiece(r, c);
+            } else {
+                // 准星二次确认模式
+                if (previewPos && previewPos.r === r && previewPos.c === c) {
+                    placePiece(r, c);
+                } else {
+                    previewPos = { r, c };
+                    document.getElementById('btnConfirmMove').style.display = 'inline-block';
+                    playTone(600, 0.03);
+                    draw();
+                }
             }
         }
 
         function aiMove() {
             if (winner !== 0) return;
-            // 启发式评估打分函数
+            const aiColor = currentTurn;
+            const humanColor = playerColor;
+
             let bestScore = -Infinity;
             let bestMove = { r: 7, c: 7 };
 
             for (let r = 0; r < GRID; r++) {
                 for (let c = 0; c < GRID; c++) {
                     if (board[r][c] === 0) {
-                        // 仅评估已有棋子两格以内的位置
                         let hasNeighbor = false;
                         for (let dr = -2; dr <= 2 && !hasNeighbor; dr++) {
                             for (let dc = -2; dc <= 2; dc++) {
@@ -272,12 +410,18 @@
                         }
                         if (!hasNeighbor && history.length > 0) continue;
 
-                        const attackScore = evaluatePoint(r, c, 2);
-                        const defenseScore = evaluatePoint(r, c, 1);
-                        const totalScore = attackScore * 1.2 + defenseScore;
+                        let atk = evaluatePoint(r, c, aiColor);
+                        let def = evaluatePoint(r, c, humanColor);
 
-                        if (totalScore > bestScore) {
-                            bestScore = totalScore;
+                        if (aiDifficulty === 'easy') {
+                            atk *= 0.7; def *= 0.6;
+                        } else if (aiDifficulty === 'hard') {
+                            atk *= 1.35; def *= 1.15;
+                        }
+
+                        const total = atk * 1.25 + def;
+                        if (total > bestScore) {
+                            bestScore = total;
                             bestMove = { r, c };
                         }
                     }
@@ -290,18 +434,16 @@
         function evaluatePoint(r, c, color) {
             let total = 0;
             const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
-            for (const [dr, dc] of dirs) {
+            for (const [dr, dc] of d) {
                 let count = 1;
                 let openEnds = 0;
 
-                // 正向
                 let nr = r + dr, nc = c + dc;
                 while (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === color) {
                     count++; nr += dr; nc += dc;
                 }
                 if (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === 0) openEnds++;
 
-                // 反向
                 nr = r - dr; nc = c - dc;
                 while (nr >= 0 && nr < GRID && nc >= 0 && nc < GRID && board[nr][nc] === color) {
                     count++; nr -= dr; nc -= dc;
@@ -324,22 +466,20 @@
             board[lastAI.r][lastAI.c] = 0;
             const lastPlayer = history.pop();
             board[lastPlayer.r][lastPlayer.c] = 0;
-            currentTurn = 1;
+            currentTurn = playerColor;
+            previewPos = null;
+            document.getElementById('btnConfirmMove').style.display = 'none';
             updateStatus();
             draw();
         }
 
         canvas.addEventListener('click', (e) => {
-            if (currentTurn !== 1 || winner !== 0) return;
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left - PADDING;
             const y = e.clientY - rect.top - PADDING;
             const c = Math.round(x / CELL);
             const r = Math.round(y / CELL);
-
-            if (r >= 0 && r < GRID && c >= 0 && c < GRID) {
-                placePiece(r, c);
-            }
+            handleBoardClick(r, c);
         });
 
         function draw() {
@@ -361,7 +501,7 @@
                 ctx.stroke();
             }
 
-            // 绘制星位
+            // 星位
             const stars = [3, 7, 11];
             ctx.fillStyle = '#614f3b';
             stars.forEach(sr => {
@@ -372,19 +512,19 @@
                 });
             });
 
-            // 绘制棋子
+            // 绘制落子
             for (let r = 0; r < GRID; r++) {
                 for (let c = 0; c < GRID; c++) {
                     const stone = board[r][c];
                     if (stone !== 0) {
                         const sx = PADDING + c * CELL;
                         const sy = PADDING + r * CELL;
-                        const radius = CELL * 0.45;
+                        const radius = CELL * 0.44;
 
                         ctx.beginPath();
                         ctx.arc(sx, sy, radius, 0, Math.PI * 2);
 
-                        if (stone === 1) { // 黑子
+                        if (stone === 1) {
                             const grad = ctx.createRadialGradient(sx - 3, sy - 3, 1, sx, sy, radius);
                             grad.addColorStop(0, '#555');
                             grad.addColorStop(1, '#0a0a0a');
@@ -392,7 +532,7 @@
                             ctx.shadowColor = 'rgba(0,0,0,0.6)';
                             ctx.shadowBlur = 5;
                             ctx.fill();
-                        } else { // 白子
+                        } else {
                             const grad = ctx.createRadialGradient(sx - 3, sy - 3, 1, sx, sy, radius);
                             grad.addColorStop(0, '#ffffff');
                             grad.addColorStop(1, '#d8d8d8');
@@ -406,22 +546,54 @@
                 }
             }
 
-            // 最后一手红点标记
+            // 最后一手光圈标记
             if (history.length > 0) {
                 const last = history[history.length - 1];
-                ctx.fillStyle = '#ef4444';
+                const lx = PADDING + last.c * CELL;
+                const ly = PADDING + last.r * CELL;
+                ctx.strokeStyle = '#00c8ff';
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(PADDING + last.c * CELL, PADDING + last.r * CELL, 3, 0, Math.PI * 2);
+                ctx.arc(lx, ly, CELL * 0.48, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // 绘制准星与半透明预选落子
+            if (previewPos && board[previewPos.r][previewPos.c] === 0) {
+                const px = PADDING + previewPos.c * CELL;
+                const py = PADDING + previewPos.r * CELL;
+
+                // 半透明虚影棋子
+                ctx.globalAlpha = 0.55;
+                ctx.fillStyle = playerColor === 1 ? '#222' : '#fff';
+                ctx.beginPath();
+                ctx.arc(px, py, CELL * 0.42, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.globalAlpha = 1.0;
+
+                // 发光十字准星
+                ctx.strokeStyle = '#00ff9d';
+                ctx.lineWidth = 2;
+                const cs = 10;
+                ctx.beginPath();
+                ctx.moveTo(px - cs, py); ctx.lineTo(px + cs, py);
+                ctx.moveTo(px, py - cs); ctx.lineTo(px, py + cs);
+                ctx.stroke();
+
+                ctx.strokeRect(px - cs, py - cs, cs * 2, cs * 2);
             }
         }
 
         TouchController.init({
             buttons: [
+                { id: 'confirm', label: '✔ 落子', key: ' ', code: 'Space', class: 'accent' },
                 { id: 'undo', label: '↩ 悔棋', key: 'u', code: 'KeyU' }
             ],
             onAction: (action, isPressed) => {
-                if (isPressed && action === 'undo') undoMove();
+                if (isPressed) {
+                    if (action === 'confirm') confirmPreviewMove();
+                    if (action === 'undo') undoMove();
+                }
             }
         });
 

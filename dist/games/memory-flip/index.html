@@ -53,6 +53,7 @@
             flex-direction: column;
             align-items: center;
             margin-top: 45px;
+            position: relative;
         }
         .info-bar {
             width: 100%;
@@ -84,48 +85,87 @@
             height: 100%;
             cursor: pointer;
             transform-style: preserve-3d;
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.42s cubic-bezier(0.18, 0.9, 0.35, 1.15);
+        }
+        .card:hover:not(.flipped):not(.matched) {
+            transform: translateY(-4px) scale(1.03);
         }
         .card.flipped {
-            transform: rotateY(180deg);
+            transform: rotateY(180deg) translateY(-2px);
+        }
+        .card.shake {
+            animation: cardWobble 0.45s ease-in-out;
+        }
+        @keyframes cardWobble {
+            0%, 100% { transform: rotateY(180deg) translateX(0); }
+            20% { transform: rotateY(180deg) translateX(-9px) rotate(-3deg); }
+            40% { transform: rotateY(180deg) translateX(9px) rotate(3deg); }
+            60% { transform: rotateY(180deg) translateX(-5px); }
+            80% { transform: rotateY(180deg) translateX(5px); }
         }
         .card.matched {
-            transform: rotateY(180deg) scale(0.95);
+            transform: rotateY(180deg) scale(0.96);
             pointer-events: none;
+            animation: matchCelebrate 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes matchCelebrate {
+            0% { transform: rotateY(180deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.16); }
+            100% { transform: rotateY(180deg) scale(0.96); }
         }
         .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             backface-visibility: hidden;
             border: 1.5px solid #283048;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+            overflow: hidden;
         }
         .card-front {
-            background: #181d2c;
+            background: linear-gradient(135deg, #181d2c, #111420);
             color: #00c8ff;
             font-size: 24px;
             font-weight: 700;
+            transition: all 0.2s;
+        }
+        .card-front::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+            transform: rotate(35deg);
         }
         .card-front:hover {
             border-color: #00c8ff;
-            background: #20273a;
+            background: linear-gradient(135deg, #20273a, #161a28);
+            box-shadow: 0 0 14px rgba(0, 200, 255, 0.25);
         }
         .card-back {
-            background: #101c2e;
+            background: linear-gradient(135deg, #101c2e, #0c1524);
             border-color: #00ff9d;
             color: #fff;
-            font-size: 32px;
+            font-size: 34px;
             transform: rotateY(180deg);
+            box-shadow: 0 0 16px rgba(0, 255, 157, 0.2);
         }
         .card.matched .card-back {
-            background: #0f2c25;
+            background: linear-gradient(135deg, #0d2820, #0a1e18);
             border-color: #00ff9d;
-            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.45);
+        }
+
+        #confettiCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
 
         @media (max-width: 480px) {
@@ -134,7 +174,7 @@
                 grid-template-rows: repeat(4, 64px);
                 gap: 8px;
             }
-            .card-back { font-size: 26px; }
+            .card-back { font-size: 28px; }
         }
     </style>
 </head>
@@ -145,6 +185,8 @@
     </div>
 
     <div class="game-panel">
+        <canvas id="confettiCanvas"></canvas>
+
         <div class="info-bar">
             <div class="info-item" id="movesVal">步数: 0</div>
             <div class="info-item" id="timerVal" style="color:#f59e0b">时间: 0s</div>
@@ -166,10 +208,11 @@
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 if (type === 'flip') {
-                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.setValueAtTime(380, now);
+                    osc.frequency.exponentialRampToValueAtTime(540, now + 0.05);
                     gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
-                    osc.start(now); osc.stop(now + 0.04);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
                 } else if (type === 'match') {
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(520, now);
@@ -177,6 +220,12 @@
                     gain.gain.setValueAtTime(0.15, now);
                     gain.gain.linearRampToValueAtTime(0.01, now + 0.16);
                     osc.start(now); osc.stop(now + 0.16);
+                } else if (type === 'miss') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
                 } else if (type === 'win') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, now);
@@ -189,6 +238,53 @@
                 }
             } catch(e) {}
         }
+
+        // 烟花庆祝粒子系统
+        const cCanvas = document.getElementById('confettiCanvas');
+        const cCtx = cCanvas.getContext('2d');
+        let confettis = [];
+
+        function resizeConfetti() {
+            cCanvas.width = cCanvas.parentElement.clientWidth;
+            cCanvas.height = cCanvas.parentElement.clientHeight;
+        }
+        resizeConfetti();
+        window.addEventListener('resize', resizeConfetti);
+
+        function spawnConfetti(x, y) {
+            const colors = ['#00ff9d', '#00c8ff', '#f59e0b', '#b05bf8', '#fff'];
+            for (let i = 0; i < 24; i++) {
+                confettis.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8 - 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    size: Math.random() * 5 + 3
+                });
+            }
+        }
+
+        function updateConfetti() {
+            cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+            for (let i = confettis.length - 1; i >= 0; i--) {
+                const c = confettis[i];
+                c.x += c.vx;
+                c.y += c.vy;
+                c.vy += 0.15;
+                c.life -= 0.025;
+                if (c.life <= 0) {
+                    confettis.splice(i, 1);
+                    continue;
+                }
+                cCtx.fillStyle = c.color;
+                cCtx.globalAlpha = c.life;
+                cCtx.fillRect(c.x, c.y, c.size, c.size);
+            }
+            cCtx.globalAlpha = 1.0;
+            requestAnimationFrame(updateConfetti);
+        }
+        updateConfetti();
 
         const ICONS = ['🚀', '💎', '⚡', '🕹️', '🔮', '🧬', '🛸', '👾'];
         let cards = [];
@@ -207,11 +303,11 @@
             matchedCount = 0;
             flippedCards = [];
             isLock = false;
+            confettis = [];
             document.getElementById('movesVal').textContent = `步数: 0`;
             document.getElementById('timerVal').textContent = `时间: 0s`;
             document.getElementById('pairsVal').textContent = `配对: 0/8`;
 
-            // 双份洗牌
             cards = [...ICONS, ...ICONS].sort(() => Math.random() - 0.5);
 
             gridEl.innerHTML = '';
@@ -256,6 +352,11 @@
                 matchedCount++;
                 document.getElementById('pairsVal').textContent = `配对: ${matchedCount}/8`;
                 playSfx('match');
+
+                const r1 = c1.getBoundingClientRect();
+                const rPanel = cCanvas.getBoundingClientRect();
+                spawnConfetti(r1.left - rPanel.left + r1.width / 2, r1.top - rPanel.top + r1.height / 2);
+
                 flippedCards = [];
 
                 if (matchedCount === 8) {
@@ -263,16 +364,21 @@
                     playSfx('win');
                     setTimeout(() => {
                         alert(`🎉 恭喜通关！耗时 ${timer} 秒，消耗 ${moves} 步。`);
-                    }, 300);
+                    }, 400);
                 }
             } else {
                 isLock = true;
+                playSfx('miss');
+                // 错误晃动摇摆动效
+                c1.classList.add('shake');
+                c2.classList.add('shake');
+
                 setTimeout(() => {
-                    c1.classList.remove('flipped');
-                    c2.classList.remove('flipped');
+                    c1.classList.remove('shake', 'flipped');
+                    c2.classList.remove('shake', 'flipped');
                     flippedCards = [];
                     isLock = false;
-                }, 750);
+                }, 600);
             }
         }
 

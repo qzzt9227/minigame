@@ -53,7 +53,36 @@
             flex-direction: column;
             align-items: center;
             margin-top: 45px;
+            max-width: 96vw;
         }
+
+        .difficulty-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .diff-btn {
+            background: #181c2b;
+            border: 1px solid #2c334d;
+            color: #888;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+        .diff-btn:hover { color: #fff; border-color: #384266; }
+        .diff-btn.active {
+            background: #00c8ff;
+            color: #08080c;
+            border-color: #00c8ff;
+            font-weight: 700;
+        }
+
         .control-bar {
             width: 100%;
             display: flex;
@@ -63,7 +92,7 @@
             border: 1px solid #24293e;
             border-radius: 6px;
             padding: 8px 14px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
         .status-digit {
             font-size: 24px;
@@ -92,29 +121,6 @@
         }
         .face-btn:active { transform: scale(0.92); }
 
-        .difficulty-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-            width: 100%;
-            justify-content: center;
-        }
-        .diff-btn {
-            background: #181c2b;
-            border: 1px solid #2c334d;
-            color: #888;
-            padding: 4px 14px;
-            border-radius: 4px;
-            font-size: 13px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .diff-btn.active {
-            background: #00c8ff;
-            color: #08080c;
-            border-color: #00c8ff;
-        }
-
         .touch-mode-bar {
             display: flex;
             gap: 10px;
@@ -126,7 +132,7 @@
             color: #bbb;
             padding: 6px 18px;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -141,26 +147,30 @@
             box-shadow: 0 0 12px rgba(0, 255, 157, 0.4);
         }
 
+        .grid-viewport {
+            max-width: 90vw;
+            max-height: 65vh;
+            overflow: auto;
+            border: 2px solid #282f48;
+            background: #181c2b;
+            border-radius: 6px;
+            padding: 4px;
+        }
+
         .mine-grid {
             display: grid;
             gap: 2px;
-            background: #181c2b;
-            border: 2px solid #282f48;
-            padding: 4px;
-            border-radius: 6px;
         }
         .cell {
-            width: 32px;
-            height: 32px;
             background: #252b40;
             border-radius: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
             transition: background 0.1s;
+            font-family: monospace;
         }
         .cell:hover { background: #323a56; }
         .cell.revealed {
@@ -180,9 +190,55 @@
         .c-7 { color: #e879f9; }
         .c-8 { color: #facc15; }
 
-        @media (max-width: 500px) {
-            .cell { width: 28px; height: 28px; font-size: 13px; }
+        /* 自定义设置弹窗 */
+        .custom-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(6px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
         }
+        .custom-dialog {
+            background: #121522;
+            border: 2px solid #28334e;
+            border-radius: 12px;
+            width: 320px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+        }
+        .custom-title { font-size: 17px; font-weight: 700; color: #fff; }
+        .custom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .custom-row label { font-size: 13px; color: #889; }
+        .custom-input {
+            width: 80px;
+            background: #0a0c14;
+            border: 1px solid #28324a;
+            color: #00c8ff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .custom-btns { display: flex; gap: 8px; margin-top: 6px; }
+        .c-btn {
+            flex: 1; padding: 8px 0; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;
+        }
+        .c-btn-ok { background: #00c8ff; color: #08080c; }
+        .c-btn-ok:hover { background: #00ff9d; }
+        .c-btn-cancel { background: #202638; color: #aaa; }
     </style>
 </head>
 <body>
@@ -193,8 +249,10 @@
 
     <div class="game-panel">
         <div class="difficulty-bar">
-            <button class="diff-btn active" onclick="setDiff('easy')">初级 9x9 (10雷)</button>
-            <button class="diff-btn" onclick="setDiff('medium')">中级 16x16 (40雷)</button>
+            <button class="diff-btn active" onclick="setDiff('easy', this)">初级 9x9 (10雷)</button>
+            <button class="diff-btn" onclick="setDiff('medium', this)">中级 16x16 (40雷)</button>
+            <button class="diff-btn" onclick="setDiff('expert', this)">高级 30x16 (99雷)</button>
+            <button class="diff-btn" style="color:#00ff9d;" onclick="openCustomModal()">⚙️ 自定义参数</button>
         </div>
 
         <div class="control-bar">
@@ -208,7 +266,40 @@
             <button class="mode-toggle-btn" id="btnFlag" onclick="setTouchMode('flag')">🚩 插旗模式</button>
         </div>
 
-        <div class="mine-grid" id="mineGrid"></div>
+        <div class="grid-viewport">
+            <div class="mine-grid" id="mineGrid"></div>
+        </div>
+    </div>
+
+    <!-- 自定义参数弹窗 -->
+    <div class="custom-modal" id="customModal">
+        <div class="custom-dialog">
+            <div class="custom-title">⚙️ 自定义扫雷地图</div>
+            <div class="custom-row">
+                <label>地图行数 (8 ~ 24):</label>
+                <input type="number" id="inpRows" min="8" max="24" value="12" class="custom-input">
+            </div>
+            <div class="custom-row">
+                <label>地图列数 (8 ~ 30):</label>
+                <input type="number" id="inpCols" min="8" max="30" value="12" class="custom-input">
+            </div>
+            <div class="custom-row">
+                <label>地雷数量 (1 ~ 150):</label>
+                <input type="number" id="inpMines" min="1" max="150" value="20" class="custom-input">
+            </div>
+            <div class="custom-row">
+                <label>方格大小 (像素):</label>
+                <select id="inpCellSize" class="custom-input" style="width:90px;">
+                    <option value="24">紧凑 24px</option>
+                    <option value="30" selected>标准 30px</option>
+                    <option value="36">宽敞 36px</option>
+                </select>
+            </div>
+            <div class="custom-btns">
+                <button class="c-btn c-btn-cancel" onclick="closeCustomModal()">取消</button>
+                <button class="c-btn c-btn-ok" onclick="applyCustom()">生成地图</button>
+            </div>
+        </div>
     </div>
 
     <script src="../shared/touch-controller.js"></script>
@@ -252,27 +343,51 @@
             } catch(e) {}
         }
 
-        let ROWS = 9, COLS = 9, MINES = 10;
+        let ROWS = 9, COLS = 9, MINES = 10, CELL_PX = 30;
         let board = [];
         let firstClick = true;
         let gameOver = false;
         let timer = 0, timerId = null;
-        let touchMode = 'dig'; // 'dig' or 'flag'
+        let touchMode = 'dig';
 
         const gridEl = document.getElementById('mineGrid');
         const mineCountEl = document.getElementById('mineCount');
         const timerEl = document.getElementById('timer');
         const faceBtn = document.getElementById('faceBtn');
 
-        function setDiff(level) {
+        function setDiff(level, btn) {
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
             if (level === 'easy') {
-                ROWS = 9; COLS = 9; MINES = 10;
-                document.querySelectorAll('.diff-btn')[0].classList.add('active');
-            } else {
-                ROWS = 16; COLS = 16; MINES = 40;
-                document.querySelectorAll('.diff-btn')[1].classList.add('active');
+                ROWS = 9; COLS = 9; MINES = 10; CELL_PX = 32;
+            } else if (level === 'medium') {
+                ROWS = 16; COLS = 16; MINES = 40; CELL_PX = 28;
+            } else if (level === 'expert') {
+                ROWS = 16; COLS = 30; MINES = 99; CELL_PX = 25;
             }
+            initBoard();
+        }
+
+        function openCustomModal() {
+            document.getElementById('customModal').style.display = 'flex';
+        }
+        function closeCustomModal() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+        function applyCustom() {
+            let r = parseInt(document.getElementById('inpRows').value, 10) || 12;
+            let c = parseInt(document.getElementById('inpCols').value, 10) || 12;
+            let m = parseInt(document.getElementById('inpMines').value, 10) || 20;
+            let px = parseInt(document.getElementById('inpCellSize').value, 10) || 30;
+
+            r = Math.max(8, Math.min(24, r));
+            c = Math.max(8, Math.min(30, c));
+            m = Math.max(1, Math.min(r * c - 9, m));
+
+            ROWS = r; COLS = c; MINES = m; CELL_PX = px;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            closeCustomModal();
             initBoard();
         }
 
@@ -292,7 +407,7 @@
             mineCountEl.textContent = String(MINES).padStart(3, '0');
 
             board = [];
-            gridEl.style.gridTemplateColumns = `repeat(${COLS}, auto)`;
+            gridEl.style.gridTemplateColumns = `repeat(${COLS}, ${CELL_PX}px)`;
             gridEl.innerHTML = '';
 
             for (let r = 0; r < ROWS; r++) {
@@ -301,10 +416,12 @@
                     board[r][c] = { mine: false, count: 0, revealed: false, flagged: false };
                     const cell = document.createElement('div');
                     cell.className = 'cell';
+                    cell.style.width = `${CELL_PX}px`;
+                    cell.style.height = `${CELL_PX}px`;
+                    cell.style.fontSize = `${Math.floor(CELL_PX * 0.5)}px`;
                     cell.dataset.r = r;
                     cell.dataset.c = c;
 
-                    // 点击与右击/触控处理
                     cell.addEventListener('click', (e) => onCellClick(r, c, false));
                     cell.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
@@ -321,14 +438,13 @@
             while (planted < MINES) {
                 const r = Math.floor(Math.random() * ROWS);
                 const c = Math.floor(Math.random() * COLS);
-                // 确保第一次点击及其九宫格内绝无地雷
                 if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
                 if (!board[r][c].mine) {
                     board[r][c].mine = true;
                     planted++;
                 }
             }
-            // 计算邻域雷数
+
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     if (board[r][c].mine) continue;
@@ -461,7 +577,6 @@
             }
         }
 
-        // 绑定触控快捷切换
         TouchController.init({
             buttons: [
                 { id: 'mode', label: '⛏️/🚩 切换', key: 'f', code: 'KeyF', class: 'accent' }

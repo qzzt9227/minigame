@@ -35,11 +35,14 @@
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
+            cursor: pointer;
             transition: all 0.2s;
         }
         .nav-btn:hover { background: #00c8ff; color: #08080c; }
         .nav-btn.secondary { color: #888; }
         .nav-btn.secondary:hover { background: #333; color: #fff; }
+        .nav-btn.settings { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+        .nav-btn.settings:hover { background: #f59e0b; color: #08080c; }
 
         #gameCanvas {
             background: #09090e;
@@ -47,17 +50,168 @@
             box-shadow: 0 0 35px rgba(0, 200, 255, 0.12);
             display: block;
         }
+
+        /* 设置弹窗 */
+        .settings-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .settings-dialog {
+            background: #10131e;
+            border: 2px solid #252e46;
+            border-radius: 12px;
+            width: 360px;
+            max-width: 95vw;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 200, 255, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #20283e;
+            padding-bottom: 10px;
+        }
+        .settings-title { font-size: 18px; font-weight: 700; color: #fff; }
+        .settings-close { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+        .settings-close:hover { color: #fff; }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .setting-label { font-size: 13px; color: #889; font-weight: 600; }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .opt-btn {
+            flex: 1;
+            padding: 7px 0;
+            background: #181d2c;
+            border: 1px solid #2c3652;
+            color: #aaa;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .opt-btn:hover { color: #fff; }
+        .opt-btn.active {
+            background: #00c8ff;
+            color: #08080c;
+            border-color: #00c8ff;
+            font-weight: 700;
+        }
+        .color-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #141824;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #242c40;
+        }
+        .color-name { font-size: 13px; font-weight: 600; color: #ccc; }
+        .color-preview-btn {
+            width: 38px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        .color-preview-btn:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
     <div class="top-nav">
         <a href="../index.html" class="nav-btn">← 游戏大厅</a>
         <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+        <button class="nav-btn settings" onclick="openSettings()">⚙️ 速度与参数</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
+    <!-- 设置弹窗 -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-dialog">
+            <div class="settings-header">
+                <span class="settings-title">⚙️ 乒乓球参数设置</span>
+                <button class="settings-close" onclick="closeSettings()">✕</button>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">球初速度 (减速调整)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="speed" data-val="2.8" onclick="setSpeed(2.8, this)">慢速 (2.8)</button>
+                    <button class="opt-btn active" data-type="speed" data-val="3.5" onclick="setSpeed(3.5, this)">适中 (3.5)</button>
+                    <button class="opt-btn" data-type="speed" data-val="5.0" onclick="setSpeed(5.0, this)">极速 (5.0)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">挡板长度 (接球难度)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="paddle" data-val="115" onclick="setPaddle(115, this)">加长 (115)</button>
+                    <button class="opt-btn active" data-type="paddle" data-val="90" onclick="setPaddle(90, this)">标准 (90)</button>
+                    <button class="opt-btn" data-type="paddle" data-val="65" onclick="setPaddle(65, this)">挑战 (65)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">电脑 AI 难度</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="ai" data-val="3.2" onclick="setAi(3.2, this)">新手</button>
+                    <button class="opt-btn active" data-type="ai" data-val="4.2" onclick="setAi(4.2, this)">标准</button>
+                    <button class="opt-btn" data-type="ai" data-val="5.6" onclick="setAi(5.6, this)">大师</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">获胜决胜局分</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="win" data-val="5" onclick="setWin(5, this)">5 分</button>
+                    <button class="opt-btn active" data-type="win" data-val="7" onclick="setWin(7, this)">7 分</button>
+                    <button class="opt-btn" data-type="win" data-val="11" onclick="setWin(11, this)">11 分</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">色彩个性化 (点击调色盘挑选)</div>
+                <div class="color-row">
+                    <span class="color-name">玩家挡板颜色</span>
+                    <div class="color-preview-btn" id="btnP1Color" style="background:#00c8ff;"></div>
+                </div>
+                <div class="color-row">
+                    <span class="color-name">乒乓球颜色</span>
+                    <div class="color-preview-btn" id="btnBallColor" style="background:#ffffff;"></div>
+                </div>
+            </div>
+
+            <button class="opt-btn active" style="margin-top:8px; padding:10px 0;" onclick="saveAndApplySettings()">保存并重新开始</button>
+        </div>
+    </div>
+
     <script src="../shared/touch-controller.js"></script>
+    <script src="../shared/color-picker.js"></script>
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playTone(freq, dur) {
@@ -86,30 +240,44 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const PADDLE_W = 10;
-        const PADDLE_H = 75;
-        const BALL_SIZE = 8;
-        const WIN_SCORE = 7;
+        // 设置系统
+        let settings = {
+            initSpeed: 3.5,
+            paddleH: 90,
+            aiSpeed: 4.2,
+            winScore: 7,
+            p1Color: '#00c8ff',
+            ballColor: '#ffffff'
+        };
 
-        let p1 = { y: 0, score: 0, speed: 6 };
-        let p2 = { y: 0, score: 0, speed: 4.8 };
-        let ball = { x: 0, y: 0, vx: 5, vy: 2, speed: 5 };
+        try {
+            const saved = localStorage.getItem('minigame_pong_settings');
+            if (saved) settings = Object.assign(settings, JSON.parse(saved));
+        } catch(e) {}
+
+        const PADDLE_W = 10;
+        const BALL_SIZE = 8;
+
+        let p1 = { y: 0, score: 0, speed: 6.5 };
+        let p2 = { y: 0, score: 0, speed: settings.aiSpeed };
+        let ball = { x: 0, y: 0, vx: 3.5, vy: 1.5, speed: settings.initSpeed };
         let gameState = 'playing'; // playing, end
 
         function resetRound(server = 1) {
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            ball.speed = 5.5;
+            ball.speed = settings.initSpeed;
             const angle = (Math.random() - 0.5) * (Math.PI / 3);
             ball.vx = (server === 1 ? 1 : -1) * ball.speed * Math.cos(angle);
             ball.vy = ball.speed * Math.sin(angle);
         }
 
         function initGame() {
-            p1.y = (canvas.height - PADDLE_H) / 2;
-            p2.y = (canvas.height - PADDLE_H) / 2;
+            p1.y = (canvas.height - settings.paddleH) / 2;
+            p2.y = (canvas.height - settings.paddleH) / 2;
             p1.score = 0;
             p2.score = 0;
+            p2.speed = settings.aiSpeed;
             gameState = 'playing';
             resetRound(1);
         }
@@ -123,7 +291,7 @@
         canvas.addEventListener('touchmove', e => {
             const rect = canvas.getBoundingClientRect();
             const touchY = e.touches[0].clientY - rect.top;
-            p1.y = Math.max(0, Math.min(canvas.height - PADDLE_H, touchY - PADDLE_H / 2));
+            p1.y = Math.max(0, Math.min(canvas.height - settings.paddleH, touchY - settings.paddleH / 2));
         }, { passive: true });
 
         function update() {
@@ -132,13 +300,13 @@
             // 玩家移动 (W/S 或 上/下键)
             if (keys['w'] || keys['W'] || keys['ArrowUp']) p1.y -= p1.speed;
             if (keys['s'] || keys['S'] || keys['ArrowDown']) p1.y += p1.speed;
-            p1.y = Math.max(0, Math.min(canvas.height - PADDLE_H, p1.y));
+            p1.y = Math.max(0, Math.min(canvas.height - settings.paddleH, p1.y));
 
             // 智能 AI (P2)
-            const targetY = ball.y - PADDLE_H / 2;
+            const targetY = ball.y - settings.paddleH / 2;
             if (p2.y < targetY - 4) p2.y += p2.speed;
             else if (p2.y > targetY + 4) p2.y -= p2.speed;
-            p2.y = Math.max(0, Math.min(canvas.height - PADDLE_H, p2.y));
+            p2.y = Math.max(0, Math.min(canvas.height - settings.paddleH, p2.y));
 
             // 球移动
             ball.x += ball.vx;
@@ -155,12 +323,12 @@
                 playTone(300, 0.04);
             }
 
-            // P1 击球检测
+            // P1 击球检测 (更平滑的速度递增 0.15，上限 7.5)
             if (ball.x - BALL_SIZE <= 24 && ball.x + BALL_SIZE >= 14) {
-                if (ball.y >= p1.y && ball.y <= p1.y + PADDLE_H) {
-                    ball.speed = Math.min(12, ball.speed + 0.35);
-                    const hitOffset = (ball.y - (p1.y + PADDLE_H / 2)) / (PADDLE_H / 2);
-                    const angle = hitOffset * (Math.PI / 3);
+                if (ball.y >= p1.y && ball.y <= p1.y + settings.paddleH) {
+                    ball.speed = Math.min(7.5, ball.speed + 0.15);
+                    const hitOffset = (ball.y - (p1.y + settings.paddleH / 2)) / (settings.paddleH / 2);
+                    const angle = hitOffset * (Math.PI / 3.2);
                     ball.vx = ball.speed * Math.cos(angle);
                     ball.vy = ball.speed * Math.sin(angle);
                     ball.x = 24 + BALL_SIZE;
@@ -170,10 +338,10 @@
 
             // P2 击球检测
             if (ball.x + BALL_SIZE >= canvas.width - 24 && ball.x - BALL_SIZE <= canvas.width - 14) {
-                if (ball.y >= p2.y && ball.y <= p2.y + PADDLE_H) {
-                    ball.speed = Math.min(12, ball.speed + 0.35);
-                    const hitOffset = (ball.y - (p2.y + PADDLE_H / 2)) / (PADDLE_H / 2);
-                    const angle = hitOffset * (Math.PI / 3);
+                if (ball.y >= p2.y && ball.y <= p2.y + settings.paddleH) {
+                    ball.speed = Math.min(7.5, ball.speed + 0.15);
+                    const hitOffset = (ball.y - (p2.y + settings.paddleH / 2)) / (settings.paddleH / 2);
+                    const angle = hitOffset * (Math.PI / 3.2);
                     ball.vx = -ball.speed * Math.cos(angle);
                     ball.vy = ball.speed * Math.sin(angle);
                     ball.x = canvas.width - 24 - BALL_SIZE;
@@ -185,12 +353,12 @@
             if (ball.x < -10) {
                 p2.score++;
                 playTone(200, 0.2);
-                if (p2.score >= WIN_SCORE) gameState = 'end';
+                if (p2.score >= settings.winScore) gameState = 'end';
                 else resetRound(1);
             } else if (ball.x > canvas.width + 10) {
                 p1.score++;
                 playTone(600, 0.2);
-                if (p1.score >= WIN_SCORE) gameState = 'end';
+                if (p1.score >= settings.winScore) gameState = 'end';
                 else resetRound(-1);
             }
         }
@@ -216,21 +384,21 @@
             ctx.fillText(p1.score, canvas.width / 2 - 70, 75);
             ctx.fillText(p2.score, canvas.width / 2 + 70, 75);
 
-            // 绘制玩家挡板 (P1 - 蓝)
-            ctx.fillStyle = '#00c8ff';
-            ctx.shadowColor = '#00c8ff';
+            // 绘制玩家挡板 (P1)
+            ctx.fillStyle = settings.p1Color;
+            ctx.shadowColor = settings.p1Color;
             ctx.shadowBlur = 10;
-            ctx.fillRect(14, p1.y, PADDLE_W, PADDLE_H);
+            ctx.fillRect(14, p1.y, PADDLE_W, settings.paddleH);
 
             // 绘制电脑挡板 (P2 - 橙)
             ctx.fillStyle = '#e8652b';
             ctx.shadowColor = '#e8652b';
-            ctx.fillRect(canvas.width - 24, p2.y, PADDLE_W, PADDLE_H);
+            ctx.fillRect(canvas.width - 24, p2.y, PADDLE_W, settings.paddleH);
 
             // 绘制乒乓球
-            ctx.fillStyle = '#fff';
-            ctx.shadowColor = '#00c8ff';
-            ctx.shadowBlur = 12;
+            ctx.fillStyle = settings.ballColor;
+            ctx.shadowColor = settings.p1Color;
+            ctx.shadowBlur = 10;
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, BALL_SIZE, 0, Math.PI * 2);
             ctx.fill();
@@ -239,10 +407,10 @@
             if (gameState === 'end') {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = p1.score >= WIN_SCORE ? '#00ff9d' : '#ff3366';
+                ctx.fillStyle = p1.score >= settings.winScore ? '#00ff9d' : '#ff3366';
                 ctx.font = '700 36px Rajdhani';
                 ctx.textAlign = 'center';
-                ctx.fillText(p1.score >= WIN_SCORE ? '你赢了！' : '电脑获胜', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillText(p1.score >= settings.winScore ? '🎉 你赢了！' : '电脑获胜', canvas.width / 2, canvas.height / 2 - 20);
                 ctx.fillStyle = '#00c8ff';
                 ctx.font = '500 16px Noto Sans SC';
                 ctx.fillText('点击屏幕重新对局', canvas.width / 2, canvas.height / 2 + 25);
@@ -266,6 +434,67 @@
             ]
         });
 
+        // 弹窗与设置逻辑
+        const modal = document.getElementById('settingsModal');
+        function openSettings() {
+            syncSettingsUI();
+            modal.style.display = 'flex';
+        }
+        function closeSettings() {
+            modal.style.display = 'none';
+        }
+
+        function setSpeed(v, el) {
+            settings.initSpeed = v;
+            highlightOpt('speed', el);
+        }
+        function setPaddle(v, el) {
+            settings.paddleH = v;
+            highlightOpt('paddle', el);
+        }
+        function setAi(v, el) {
+            settings.aiSpeed = v;
+            highlightOpt('ai', el);
+        }
+        function setWin(v, el) {
+            settings.winScore = v;
+            highlightOpt('win', el);
+        }
+
+        function highlightOpt(type, el) {
+            document.querySelectorAll(`.opt-btn[data-type="${type}"]`).forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function syncSettingsUI() {
+            document.querySelectorAll('.opt-btn[data-type]').forEach(b => {
+                const t = b.dataset.type;
+                const v = parseFloat(b.dataset.val);
+                if (t === 'speed' && Math.abs(settings.initSpeed - v) < 0.1) b.classList.add('active');
+                else if (t === 'paddle' && settings.paddleH === v) b.classList.add('active');
+                else if (t === 'ai' && Math.abs(settings.aiSpeed - v) < 0.1) b.classList.add('active');
+                else if (t === 'win' && settings.winScore === v) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            document.getElementById('btnP1Color').style.background = settings.p1Color;
+            document.getElementById('btnBallColor').style.background = settings.ballColor;
+        }
+
+        function saveAndApplySettings() {
+            localStorage.setItem('minigame_pong_settings', JSON.stringify(settings));
+            closeSettings();
+            initGame();
+        }
+
+        ColorPicker.attach('#btnP1Color', (hex) => {
+            settings.p1Color = hex;
+        }, settings.p1Color);
+
+        ColorPicker.attach('#btnBallColor', (hex) => {
+            settings.ballColor = hex;
+        }, settings.ballColor);
+
+        syncSettingsUI();
         loop();
     </script>
 </body>

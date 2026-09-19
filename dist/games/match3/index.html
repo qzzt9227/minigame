@@ -159,26 +159,50 @@
         ];
 
         let board = [];
+        let particles = [];
+        let floatingTexts = [];
         let selected = null;
         let score = 0;
         let timeLeft = 60;
         let timerInterval = null;
         let isProcessing = false;
+        let comboCount = 0;
         let highScore = parseInt(localStorage.getItem('minigame_match3_hi') || '0', 10);
         document.getElementById('hiScore').textContent = highScore;
 
+        function createGem(id, r, c, fromTop = false) {
+            const targetX = c * CELL_SIZE;
+            const targetY = r * CELL_SIZE;
+            return {
+                id,
+                r, c,
+                renderX: targetX,
+                renderY: fromTop ? -CELL_SIZE * (Math.random() * 2 + 1) : targetY,
+                targetX,
+                targetY,
+                scale: 1.0,
+                alpha: 1.0,
+                isRemoving: false
+            };
+        }
+
         function initGame() {
             board = [];
+            particles = [];
+            floatingTexts = [];
             score = 0;
             timeLeft = 60;
             selected = null;
+            isProcessing = false;
+            comboCount = 0;
             document.getElementById('score').textContent = '0';
             document.getElementById('timer').textContent = '60s';
 
             for (let r = 0; r < GRID; r++) {
                 board[r] = [];
                 for (let c = 0; c < GRID; c++) {
-                    board[r][c] = randomGemWithoutMatch(r, c);
+                    const id = randomGemWithoutMatch(r, c);
+                    board[r][c] = createGem(id, r, c, false);
                 }
             }
 
@@ -195,19 +219,20 @@
 
         function randomGemWithoutMatch(r, c) {
             let forbidden = [];
-            if (c >= 2 && board[r][c-1] === board[r][c-2]) forbidden.push(board[r][c-1]);
-            if (r >= 2 && board[r-1][c] === board[r-2][c]) forbidden.push(board[r-1][c]);
+            if (c >= 2 && board[r][c-1]?.id === board[r][c-2]?.id) forbidden.push(board[r][c-1].id);
+            if (r >= 2 && board[r-1][c]?.id === board[r-2][c]?.id) forbidden.push(board[r-1][c].id);
             const allowed = [0, 1, 2, 3, 4].filter(id => !forbidden.includes(id));
             return allowed[Math.floor(Math.random() * allowed.length)];
         }
 
         function findMatches() {
             const matches = [];
-            // 水平匹配
+            // 水平检测
             for (let r = 0; r < GRID; r++) {
                 let matchLen = 1;
                 for (let c = 0; c < GRID; c++) {
-                    let isSame = c < GRID - 1 && board[r][c] !== -1 && board[r][c] === board[r][c + 1];
+                    let isSame = c < GRID - 1 && board[r][c] && board[r][c + 1] &&
+                                 board[r][c].id !== -1 && board[r][c].id === board[r][c + 1].id;
                     if (isSame) {
                         matchLen++;
                     } else {
@@ -218,11 +243,12 @@
                     }
                 }
             }
-            // 垂直匹配
+            // 垂直检测
             for (let c = 0; c < GRID; c++) {
                 let matchLen = 1;
                 for (let r = 0; r < GRID; r++) {
-                    let isSame = r < GRID - 1 && board[r][c] !== -1 && board[r][c] === board[r + 1][c];
+                    let isSame = r < GRID - 1 && board[r][c] && board[r + 1][c] &&
+                                 board[r][c].id !== -1 && board[r][c].id === board[r + 1][c].id;
                     if (isSame) {
                         matchLen++;
                     } else {
@@ -236,6 +262,19 @@
             return matches;
         }
 
+        function spawnExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color,
+                    life: 1.0,
+                    size: Math.random() * 4 + 2
+                });
+            }
+        }
+
         async function resolveMatches() {
             isProcessing = true;
             let hadMatch = false;
@@ -244,11 +283,12 @@
                 const matches = findMatches();
                 if (matches.length === 0) break;
                 hadMatch = true;
+                comboCount++;
 
                 playSfx('match');
-                // 标记消除
                 const unique = new Set(matches.map(m => `${m.r},${m.c}`));
-                score += unique.size * 30;
+                const earned = unique.size * 30 * (comboCount > 1 ? comboCount : 1);
+                score += earned;
                 document.getElementById('score').textContent = score;
 
                 if (score > highScore) {
@@ -257,49 +297,108 @@
                     document.getElementById('hiScore').textContent = highScore;
                 }
 
+                // 消除动效：爆发粒子与缩放淡出
                 unique.forEach(pos => {
                     const [r, c] = pos.split(',').map(Number);
-                    board[r][c] = -1;
+                    const gem = board[r][c];
+                    if (gem) {
+                        const px = gem.renderX + CELL_SIZE / 2;
+                        const py = gem.renderY + CELL_SIZE / 2;
+                        spawnExplosion(px, py, GEMS[gem.id].color);
+                        gem.isRemoving = true;
+                    }
                 });
 
-                // 下落填补
+                if (comboCount > 1) {
+                    const firstMatch = matches[0];
+                    floatingTexts.push({
+                        text: `COMBO x${comboCount}!`,
+                        x: firstMatch.c * CELL_SIZE + CELL_SIZE / 2,
+                        y: firstMatch.r * CELL_SIZE + CELL_SIZE / 2,
+                        life: 1.0,
+                        color: '#00ff9d'
+                    });
+                }
+
+                // 留出消除动画展示帧
+                await new Promise(res => setTimeout(res, 220));
+
+                // 物理下落重构：上层宝石更新 targetY，顶部掉落新宝石
                 for (let c = 0; c < GRID; c++) {
                     let emptyRow = GRID - 1;
                     for (let r = GRID - 1; r >= 0; r--) {
-                        if (board[r][c] !== -1) {
-                            board[emptyRow][c] = board[r][c];
-                            if (emptyRow !== r) board[r][c] = -1;
+                        if (board[r][c] && !board[r][c].isRemoving && board[r][c].id !== -1) {
+                            const gem = board[r][c];
+                            if (emptyRow !== r) {
+                                gem.r = emptyRow;
+                                gem.targetY = emptyRow * CELL_SIZE;
+                                board[emptyRow][c] = gem;
+                                board[r][c] = null;
+                            }
                             emptyRow--;
+                        } else {
+                            board[r][c] = null;
                         }
                     }
+
+                    // 填补上方空位
+                    let dropStagger = 1;
                     for (let r = emptyRow; r >= 0; r--) {
-                        board[r][c] = Math.floor(Math.random() * GEMS.length);
+                        const newId = Math.floor(Math.random() * GEMS.length);
+                        const newGem = createGem(newId, r, c, true);
+                        newGem.renderY = -CELL_SIZE * dropStagger;
+                        board[r][c] = newGem;
+                        dropStagger++;
                     }
                 }
 
-                await new Promise(res => setTimeout(res, 180));
+                await new Promise(res => setTimeout(res, 280));
             }
 
+            comboCount = 0;
             isProcessing = false;
             return hadMatch;
         }
 
         async function swap(r1, c1, r2, c2) {
+            isProcessing = true;
             playSfx('swap');
-            const temp = board[r1][c1];
-            board[r1][c1] = board[r2][c2];
-            board[r2][c2] = temp;
+
+            const g1 = board[r1][c1];
+            const g2 = board[r2][c2];
+
+            // 交换 target 坐标展示平滑移动
+            g1.targetX = c2 * CELL_SIZE;
+            g1.targetY = r2 * CELL_SIZE;
+            g2.targetX = c1 * CELL_SIZE;
+            g2.targetY = r1 * CELL_SIZE;
+
+            board[r1][c1] = g2;
+            board[r2][c2] = g1;
+            g1.r = r2; g1.c = c2;
+            g2.r = r1; g2.c = c1;
+
+            // 等待平滑移动动效到位
+            await new Promise(res => setTimeout(res, 180));
 
             const matched = await resolveMatches();
             if (!matched) {
-                // 回退交换
-                const roll = board[r1][c1];
-                board[r1][c1] = board[r2][c2];
-                board[r2][c2] = roll;
+                // 没有匹配则动效退回
+                playSfx('swap');
+                g1.targetX = c1 * CELL_SIZE;
+                g1.targetY = r1 * CELL_SIZE;
+                g2.targetX = c2 * CELL_SIZE;
+                g2.targetY = r2 * CELL_SIZE;
+
+                board[r1][c1] = g1;
+                board[r2][c2] = g2;
+                g1.r = r1; g1.c = c1;
+                g2.r = r2; g2.c = c2;
+                await new Promise(res => setTimeout(res, 180));
             }
+            isProcessing = false;
         }
 
-        // 触屏与点击交互
         canvas.addEventListener('click', async (e) => {
             if (isProcessing || timeLeft <= 0) return;
             const rect = canvas.getBoundingClientRect();
@@ -322,7 +421,7 @@
             }
         });
 
-        // 触屏滑动手势直接交换
+        // 触屏滑动交换
         let touchStartCell = null;
         canvas.addEventListener('touchstart', e => {
             if (isProcessing || timeLeft <= 0) return;
@@ -355,13 +454,11 @@
             ctx.fillStyle = '#0d0f18';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // 绘制单元格底板与选中框
             for (let r = 0; r < GRID; r++) {
                 for (let c = 0; c < GRID; c++) {
-                    const gemId = board[r][c];
                     const cx = c * CELL_SIZE;
                     const cy = r * CELL_SIZE;
-
-                    // 单元格背景
                     ctx.fillStyle = (r + c) % 2 === 0 ? '#121524' : '#151828';
                     ctx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE);
 
@@ -372,41 +469,96 @@
                         ctx.lineWidth = 2;
                         ctx.strokeRect(cx + 1, cy + 1, CELL_SIZE - 2, CELL_SIZE - 2);
                     }
-
-                    if (gemId >= 0 && gemId < GEMS.length) {
-                        const g = GEMS[gemId];
-                        const center = CELL_SIZE / 2;
-                        const radius = CELL_SIZE * 0.35;
-
-                        ctx.fillStyle = g.color;
-                        ctx.shadowColor = g.color;
-                        ctx.shadowBlur = 6;
-                        ctx.beginPath();
-
-                        if (g.shape === 'circle') {
-                            ctx.arc(cx + center, cy + center, radius, 0, Math.PI * 2);
-                        } else if (g.shape === 'square') {
-                            ctx.rect(cx + center - radius, cy + center - radius, radius * 2, radius * 2);
-                        } else if (g.shape === 'diamond') {
-                            ctx.moveTo(cx + center, cy + center - radius);
-                            ctx.lineTo(cx + center + radius, cy + center);
-                            ctx.lineTo(cx + center, cy + center + radius);
-                            ctx.lineTo(cx + center - radius, cy + center);
-                            ctx.closePath();
-                        } else if (g.shape === 'triangle') {
-                            ctx.moveTo(cx + center, cy + center - radius);
-                            ctx.lineTo(cx + center + radius, cy + center + radius);
-                            ctx.lineTo(cx + center - radius, cy + center + radius);
-                            ctx.closePath();
-                        } else {
-                            ctx.arc(cx + center, cy + center, radius, 0, Math.PI * 2);
-                        }
-                        ctx.fill();
-                        ctx.shadowBlur = 0;
-                    }
                 }
             }
 
+            // 绘制宝石（带平滑坐标插值与消除缩放）
+            for (let r = 0; r < GRID; r++) {
+                for (let c = 0; c < GRID; c++) {
+                    const gem = board[r][c];
+                    if (!gem) continue;
+
+                    // 平滑插值动画
+                    gem.renderX += (gem.targetX - gem.renderX) * 0.25;
+                    gem.renderY += (gem.targetY - gem.renderY) * 0.25;
+
+                    if (gem.isRemoving) {
+                        gem.scale = Math.max(0, gem.scale - 0.12);
+                        gem.alpha = Math.max(0, gem.alpha - 0.12);
+                    }
+
+                    if (gem.scale <= 0.01) continue;
+
+                    const g = GEMS[gem.id];
+                    const center = CELL_SIZE / 2;
+                    const radius = CELL_SIZE * 0.35 * gem.scale;
+
+                    ctx.save();
+                    ctx.globalAlpha = gem.alpha;
+                    ctx.translate(gem.renderX + center, gem.renderY + center);
+
+                    ctx.fillStyle = g.color;
+                    ctx.shadowColor = g.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+
+                    if (g.shape === 'circle') {
+                        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    } else if (g.shape === 'square') {
+                        ctx.rect(-radius, -radius, radius * 2, radius * 2);
+                    } else if (g.shape === 'diamond') {
+                        ctx.moveTo(0, -radius);
+                        ctx.lineTo(radius, 0);
+                        ctx.lineTo(0, radius);
+                        ctx.lineTo(-radius, 0);
+                        ctx.closePath();
+                    } else if (g.shape === 'triangle') {
+                        ctx.moveTo(0, -radius);
+                        ctx.lineTo(radius, radius);
+                        ctx.lineTo(-radius, radius);
+                        ctx.closePath();
+                    } else {
+                        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            // 绘制消除爆炸粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.04;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // 绘制浮动连击字效
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y -= 1.2;
+                ft.life -= 0.025;
+                if (ft.life <= 0) {
+                    floatingTexts.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = ft.color;
+                ctx.globalAlpha = ft.life;
+                ctx.font = '700 20px Rajdhani';
+                ctx.textAlign = 'center';
+                ctx.fillText(ft.text, ft.x, ft.y);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // 结算画面
             if (timeLeft <= 0) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);

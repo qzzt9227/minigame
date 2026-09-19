@@ -35,11 +35,14 @@
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
+            cursor: pointer;
             transition: all 0.2s;
         }
         .nav-btn:hover { background: #00c8ff; color: #08080c; }
         .nav-btn.secondary { color: #888; }
         .nav-btn.secondary:hover { background: #333; color: #fff; }
+        .nav-btn.settings { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+        .nav-btn.settings:hover { background: #f59e0b; color: #08080c; }
 
         #gameCanvas {
             background: #0a0e17;
@@ -47,17 +50,168 @@
             border: 1px solid #1a2233;
             display: block;
         }
+
+        /* 设置弹窗 */
+        .settings-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .settings-dialog {
+            background: #10131e;
+            border: 2px solid #252e46;
+            border-radius: 12px;
+            width: 360px;
+            max-width: 95vw;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 200, 255, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #20283e;
+            padding-bottom: 10px;
+        }
+        .settings-title { font-size: 18px; font-weight: 700; color: #fff; }
+        .settings-close { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+        .settings-close:hover { color: #fff; }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .setting-label { font-size: 13px; color: #889; font-weight: 600; }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .opt-btn {
+            flex: 1;
+            padding: 7px 0;
+            background: #181d2c;
+            border: 1px solid #2c3652;
+            color: #aaa;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .opt-btn:hover { color: #fff; }
+        .opt-btn.active {
+            background: #00c8ff;
+            color: #08080c;
+            border-color: #00c8ff;
+            font-weight: 700;
+        }
+        .color-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #141824;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #242c40;
+        }
+        .color-name { font-size: 13px; font-weight: 600; color: #ccc; }
+        .color-preview-btn {
+            width: 38px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        .color-preview-btn:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
     <div class="top-nav">
         <a href="../index.html" class="nav-btn">← 游戏大厅</a>
         <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+        <button class="nav-btn settings" onclick="openSettings()">⚙️ 难度设置</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
+    <!-- 设置弹窗 -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-dialog">
+            <div class="settings-header">
+                <span class="settings-title">⚙️ 像素飞鸟设置</span>
+                <button class="settings-close" onclick="closeSettings()">✕</button>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">飞行速度 (反应时间)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="speed" data-val="1.3" onclick="setSpeed(1.3, this)">舒适 (1.3)</button>
+                    <button class="opt-btn active" data-type="speed" data-val="1.7" onclick="setSpeed(1.7, this)">标准 (1.7)</button>
+                    <button class="opt-btn" data-type="speed" data-val="2.3" onclick="setSpeed(2.3, this)">挑战 (2.3)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">管道空隙 (穿过容错)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="gap" data-val="185" onclick="setGap(185, this)">宽敞 (185)</button>
+                    <button class="opt-btn active" data-type="gap" data-val="160" onclick="setGap(160, this)">标准 (160)</button>
+                    <button class="opt-btn" data-type="gap" data-val="135" onclick="setGap(135, this)">狭窄 (135)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">管道间距 (密集程度)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="density" data-val="130" onclick="setDensity(130, this)">稀疏</button>
+                    <button class="opt-btn active" data-type="density" data-val="110" onclick="setDensity(110, this)">标准</button>
+                    <button class="opt-btn" data-type="density" data-val="85" onclick="setDensity(85, this)">密集</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">飞鸟体型大小</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="birdSize" data-val="10" onclick="setBirdSize(10, this)">轻巧</button>
+                    <button class="opt-btn active" data-type="birdSize" data-val="13" onclick="setBirdSize(13, this)">标准</button>
+                    <button class="opt-btn" data-type="birdSize" data-val="16" onclick="setBirdSize(16, this)">大号</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">色彩个性化 (点击调色盘)</div>
+                <div class="color-row">
+                    <span class="color-name">飞鸟颜色</span>
+                    <div class="color-preview-btn" id="btnBirdColor" style="background:#f59e0b;"></div>
+                </div>
+                <div class="color-row">
+                    <span class="color-name">管道颜色</span>
+                    <div class="color-preview-btn" id="btnPipeColor" style="background:#10b981;"></div>
+                </div>
+            </div>
+
+            <button class="opt-btn active" style="margin-top:8px; padding:10px 0;" onclick="saveAndApplySettings()">保存并重新开始</button>
+        </div>
+    </div>
+
     <script src="../shared/touch-controller.js"></script>
+    <script src="../shared/color-picker.js"></script>
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
@@ -102,13 +256,26 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const GRAVITY = 0.35;
-        const JUMP = -6.5;
-        const PIPE_SPEED = 2.4;
-        const PIPE_GAP = 135;
-        const PIPE_WIDTH = 56;
+        // 设置参数系统
+        let settings = {
+            speed: 1.7,
+            pipeGap: 160,
+            pipeInterval: 110,
+            birdRadius: 13,
+            birdColor: '#f59e0b',
+            pipeColor: '#10b981'
+        };
 
-        let bird = { x: 70, y: 250, vy: 0, radius: 14 };
+        try {
+            const saved = localStorage.getItem('minigame_flappy_settings');
+            if (saved) settings = Object.assign(settings, JSON.parse(saved));
+        } catch(e) {}
+
+        const GRAVITY = 0.28;
+        const JUMP = -5.8;
+        const PIPE_WIDTH = 54;
+
+        let bird = { x: 70, y: 250, vy: 0, radius: settings.birdRadius };
         let pipes = [];
         let score = 0;
         let highScore = parseInt(localStorage.getItem('minigame_flappy_hi') || '0', 10);
@@ -116,7 +283,7 @@
         let frame = 0;
 
         function resetGame() {
-            bird = { x: 70, y: canvas.height / 2, vy: 0, radius: 14 };
+            bird = { x: 70, y: canvas.height / 2, vy: 0, radius: settings.birdRadius };
             pipes = [];
             score = 0;
             gameState = 'playing';
@@ -146,15 +313,15 @@
                     gameOver();
                 }
 
-                // 生成管道
-                if (frame % 85 === 0) {
+                // 生成管道 (根据密度参数)
+                if (frame % settings.pipeInterval === 0) {
                     const minTop = 60;
-                    const maxTop = canvas.height - 30 - PIPE_GAP - 60;
+                    const maxTop = canvas.height - 30 - settings.pipeGap - 60;
                     const topHeight = Math.floor(Math.random() * (maxTop - minTop)) + minTop;
                     pipes.push({
                         x: canvas.width,
                         top: topHeight,
-                        bottom: canvas.height - 30 - topHeight - PIPE_GAP,
+                        bottom: canvas.height - 30 - topHeight - settings.pipeGap,
                         passed: false
                     });
                 }
@@ -162,7 +329,7 @@
                 // 移动管道与碰撞判定
                 for (let i = pipes.length - 1; i >= 0; i--) {
                     const p = pipes[i];
-                    p.x -= PIPE_SPEED;
+                    p.x -= settings.speed;
 
                     // 得分判定
                     if (!p.passed && p.x + PIPE_WIDTH < bird.x) {
@@ -175,7 +342,7 @@
                         }
                     }
 
-                    // 碰撞检测 (AABB 盒检测)
+                    // 碰撞检测 (圆形与 AABB 盒精准相交)
                     if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + PIPE_WIDTH) {
                         if (bird.y - bird.radius < p.top || bird.y + bird.radius > canvas.height - 30 - p.bottom) {
                             gameOver();
@@ -208,18 +375,21 @@
 
             // 绘制管道
             pipes.forEach(p => {
+                ctx.fillStyle = settings.pipeColor;
                 // 上管道
-                ctx.fillStyle = '#10b981';
                 ctx.fillRect(p.x, 0, PIPE_WIDTH, p.top);
-                ctx.fillStyle = '#059669';
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.fillRect(p.x - 3, p.top - 18, PIPE_WIDTH + 6, 18);
+                ctx.fillStyle = settings.pipeColor;
+                ctx.fillRect(p.x - 2, p.top - 17, PIPE_WIDTH + 4, 16);
 
                 // 下管道
                 const botY = canvas.height - 30 - p.bottom;
-                ctx.fillStyle = '#10b981';
                 ctx.fillRect(p.x, botY, PIPE_WIDTH, p.bottom);
-                ctx.fillStyle = '#059669';
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.fillRect(p.x - 3, botY, PIPE_WIDTH + 6, 18);
+                ctx.fillStyle = settings.pipeColor;
+                ctx.fillRect(p.x - 2, botY + 1, PIPE_WIDTH + 4, 16);
             });
 
             // 绘制地面
@@ -235,7 +405,7 @@
             ctx.rotate(rot);
 
             // 身体
-            ctx.fillStyle = '#f59e0b';
+            ctx.fillStyle = settings.birdColor;
             ctx.beginPath();
             ctx.arc(0, 0, bird.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -243,19 +413,19 @@
             // 眼睛
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(6, -4, 4, 0, Math.PI * 2);
+            ctx.arc(bird.radius * 0.4, -bird.radius * 0.3, bird.radius * 0.28, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#000';
             ctx.beginPath();
-            ctx.arc(7, -4, 2, 0, Math.PI * 2);
+            ctx.arc(bird.radius * 0.48, -bird.radius * 0.3, bird.radius * 0.14, 0, Math.PI * 2);
             ctx.fill();
 
             // 嘴喙
             ctx.fillStyle = '#ea580c';
             ctx.beginPath();
-            ctx.moveTo(8, 0);
-            ctx.lineTo(16, 3);
-            ctx.lineTo(8, 6);
+            ctx.moveTo(bird.radius * 0.55, 0);
+            ctx.lineTo(bird.radius * 1.15, bird.radius * 0.2);
+            ctx.lineTo(bird.radius * 0.55, bird.radius * 0.4);
             ctx.closePath();
             ctx.fill();
             ctx.restore();
@@ -315,6 +485,69 @@
             ]
         });
 
+        // 弹窗与设置函数
+        const modal = document.getElementById('settingsModal');
+        function openSettings() {
+            syncSettingsUI();
+            modal.style.display = 'flex';
+        }
+        function closeSettings() {
+            modal.style.display = 'none';
+        }
+
+        function setSpeed(v, el) {
+            settings.speed = v;
+            highlightOpt('speed', el);
+        }
+        function setGap(v, el) {
+            settings.pipeGap = v;
+            highlightOpt('gap', el);
+        }
+        function setDensity(v, el) {
+            settings.pipeInterval = v;
+            highlightOpt('density', el);
+        }
+        function setBirdSize(v, el) {
+            settings.birdRadius = v;
+            bird.radius = v;
+            highlightOpt('birdSize', el);
+        }
+
+        function highlightOpt(type, el) {
+            document.querySelectorAll(`.opt-btn[data-type="${type}"]`).forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function syncSettingsUI() {
+            document.querySelectorAll('.opt-btn[data-type]').forEach(b => {
+                const t = b.dataset.type;
+                const v = parseFloat(b.dataset.val);
+                if (t === 'speed' && Math.abs(settings.speed - v) < 0.1) b.classList.add('active');
+                else if (t === 'gap' && settings.pipeGap === v) b.classList.add('active');
+                else if (t === 'density' && settings.pipeInterval === v) b.classList.add('active');
+                else if (t === 'birdSize' && settings.birdRadius === v) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            document.getElementById('btnBirdColor').style.background = settings.birdColor;
+            document.getElementById('btnPipeColor').style.background = settings.pipeColor;
+        }
+
+        function saveAndApplySettings() {
+            localStorage.setItem('minigame_flappy_settings', JSON.stringify(settings));
+            closeSettings();
+            resetGame();
+        }
+
+        // 调色盘绑定
+        ColorPicker.attach('#btnBirdColor', (hex) => {
+            settings.birdColor = hex;
+        }, settings.birdColor);
+
+        ColorPicker.attach('#btnPipeColor', (hex) => {
+            settings.pipeColor = hex;
+        }, settings.pipeColor);
+
+        syncSettingsUI();
         loop();
     </script>
 </body>

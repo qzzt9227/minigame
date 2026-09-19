@@ -35,11 +35,14 @@
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
+            cursor: pointer;
             transition: all 0.2s;
         }
         .nav-btn:hover { background: #00c8ff; color: #08080c; }
         .nav-btn.secondary { color: #888; }
         .nav-btn.secondary:hover { background: #333; color: #fff; }
+        .nav-btn.settings { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+        .nav-btn.settings:hover { background: #f59e0b; color: #08080c; }
 
         #gameCanvas {
             background: #0b0e14;
@@ -47,17 +50,168 @@
             box-shadow: 0 0 35px rgba(0, 200, 255, 0.15);
             display: block;
         }
+
+        /* 设置弹窗 */
+        .settings-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .settings-dialog {
+            background: #10131e;
+            border: 2px solid #252e46;
+            border-radius: 12px;
+            width: 360px;
+            max-width: 95vw;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 200, 255, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #20283e;
+            padding-bottom: 10px;
+        }
+        .settings-title { font-size: 18px; font-weight: 700; color: #fff; }
+        .settings-close { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+        .settings-close:hover { color: #fff; }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .setting-label { font-size: 13px; color: #889; font-weight: 600; }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .opt-btn {
+            flex: 1;
+            padding: 7px 0;
+            background: #181d2c;
+            border: 1px solid #2c3652;
+            color: #aaa;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .opt-btn:hover { color: #fff; }
+        .opt-btn.active {
+            background: #00c8ff;
+            color: #08080c;
+            border-color: #00c8ff;
+            font-weight: 700;
+        }
+        .color-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #141824;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #242c40;
+        }
+        .color-name { font-size: 13px; font-weight: 600; color: #ccc; }
+        .color-preview-btn {
+            width: 38px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        .color-preview-btn:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
     <div class="top-nav">
         <a href="../index.html" class="nav-btn">← 游戏大厅</a>
         <a href="../../index.html" class="nav-btn secondary">⌂ 导航中枢</a>
+        <button class="nav-btn settings" onclick="openSettings()">⚙️ 难度设置</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
+    <!-- 设置弹窗 -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-dialog">
+            <div class="settings-header">
+                <span class="settings-title">⚙️ 涂鸦跳跃设置</span>
+                <button class="settings-close" onclick="closeSettings()">✕</button>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">平台宽度 (落脚面积)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="platW" data-val="88" onclick="setPlatW(88, this)">加宽 (88)</button>
+                    <button class="opt-btn active" data-type="platW" data-val="70" onclick="setPlatW(70, this)">标准 (70)</button>
+                    <button class="opt-btn" data-type="platW" data-val="54" onclick="setPlatW(54, this)">狭窄 (54)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">弹跳冲量 (起跳高度)</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="jump" data-val="-9.6" onclick="setJump(-9.6, this)">强力</button>
+                    <button class="opt-btn active" data-type="jump" data-val="-8.6" onclick="setJump(-8.6, this)">标准</button>
+                    <button class="opt-btn" data-type="jump" data-val="-7.8" onclick="setJump(-7.8, this)">适度</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">弹簧道具生成概率</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="spring" data-val="0.25" onclick="setSpring(0.25, this)">丰富 (25%)</button>
+                    <button class="opt-btn active" data-type="spring" data-val="0.15" onclick="setSpring(0.15, this)">标准 (15%)</button>
+                    <button class="opt-btn" data-type="spring" data-val="0.06" onclick="setSpring(0.06, this)">稀有 (6%)</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">水平移动灵敏度</div>
+                <div class="btn-row">
+                    <button class="opt-btn" data-type="moveSpeed" data-val="4.5" onclick="setMoveSpeed(4.5, this)">稳健</button>
+                    <button class="opt-btn active" data-type="moveSpeed" data-val="5.8" onclick="setMoveSpeed(5.8, this)">标准</button>
+                    <button class="opt-btn" data-type="moveSpeed" data-val="7.2" onclick="setMoveSpeed(7.2, this)">敏捷</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">色彩个性化 (点击调色盘挑选)</div>
+                <div class="color-row">
+                    <span class="color-name">角色颜色</span>
+                    <div class="color-preview-btn" id="btnDoodlePlayerColor" style="background:#facc15;"></div>
+                </div>
+                <div class="color-row">
+                    <span class="color-name">标准平台颜色</span>
+                    <div class="color-preview-btn" id="btnDoodlePlatColor" style="background:#10b981;"></div>
+                </div>
+            </div>
+
+            <button class="opt-btn active" style="margin-top:8px; padding:10px 0;" onclick="saveAndApplySettings()">保存并重新开始</button>
+        </div>
+    </div>
+
     <script src="../shared/touch-controller.js"></script>
+    <script src="../shared/color-picker.js"></script>
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
@@ -82,11 +236,11 @@
                     osc.start(now); osc.stop(now + 0.25);
                 } else if (type === 'fall') {
                     osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(250, now);
-                    osc.frequency.linearRampToValueAtTime(50, now + 0.4);
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-                    osc.start(now); osc.stop(now + 0.4);
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.linearRampToValueAtTime(45, now + 0.7);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.7);
+                    osc.start(now); osc.stop(now + 0.7);
                 }
             } catch(e) {}
         }
@@ -101,52 +255,70 @@
         resize();
         window.addEventListener('resize', resize);
 
+        // 自定义设置
+        let settings = {
+            platW: 70,
+            jumpForce: -8.6,
+            springRate: 0.15,
+            moveSpeed: 5.8,
+            playerColor: '#facc15',
+            platColor: '#10b981'
+        };
+
+        try {
+            const saved = localStorage.getItem('minigame_doodle_settings');
+            if (saved) settings = Object.assign(settings, JSON.parse(saved));
+        } catch(e) {}
+
         const GRAVITY = 0.28;
-        const JUMP_FORCE = -8.8;
-        const PLAT_W = 68;
         const PLAT_H = 12;
 
-        let player = { x: 200, y: 400, vx: 0, vy: 0, r: 16 };
+        let player = { x: 200, y: 400, vx: 0, vy: 0, r: 15 };
         let platforms = [];
         let springs = [];
         let score = 0;
         let maxHeight = 0;
         let highScore = parseInt(localStorage.getItem('minigame_doodle_hi') || '0', 10);
-        let gameState = 'playing'; // playing, gameover
+        let gameState = 'playing'; // playing, falling, gameover
+        let fallTimer = 0;
+        let fallSpeedLines = [];
 
         function resetGame() {
             player.x = canvas.width / 2;
-            player.y = canvas.height - 120;
+            player.y = canvas.height - 130;
             player.vx = 0;
-            player.vy = JUMP_FORCE;
+            player.vy = settings.jumpForce;
             score = 0;
             maxHeight = 0;
             gameState = 'playing';
+            fallTimer = 0;
+            fallSpeedLines = [];
 
             platforms = [];
             springs = [];
 
-            // 第一块落脚平台
-            platforms.push({ x: canvas.width / 2 - PLAT_W / 2, y: canvas.height - 70, type: 'normal' });
+            // 初始落脚平台
+            platforms.push({ x: canvas.width / 2 - settings.platW / 2, y: canvas.height - 70, type: 'normal' });
 
-            for (let y = canvas.height - 140; y > 0; y -= 60) {
+            // 从底部往上初始生成一整屏幕平台
+            for (let y = canvas.height - 140; y > -20; y -= 60) {
                 spawnPlatform(y);
             }
         }
 
         function spawnPlatform(y) {
-            const x = Math.random() * (canvas.width - PLAT_W);
+            const x = Math.random() * (canvas.width - settings.platW);
             const rand = Math.random();
             let type = 'normal';
             if (rand < 0.2) type = 'moving';
             else if (rand < 0.3) type = 'broken';
 
-            const p = { x, y, type, vx: type === 'moving' ? (Math.random() < 0.5 ? 1.5 : -1.5) : 0 };
+            const p = { x, y, type, vx: type === 'moving' ? (Math.random() < 0.5 ? 1.6 : -1.6) : 0 };
             platforms.push(p);
 
-            // 15% 几率刷出弹簧
-            if (type === 'normal' && Math.random() < 0.15) {
-                springs.push({ x: x + PLAT_W / 2 - 8, y: y - 10, w: 16, h: 10, parent: p });
+            // 道具弹簧根据设定几率
+            if (type === 'normal' && Math.random() < settings.springRate) {
+                springs.push({ x: x + settings.platW / 2 - 8, y: y - 10, w: 16, h: 10, parent: p });
             }
         }
 
@@ -157,16 +329,48 @@
         window.addEventListener('keyup', e => keys[e.key] = false);
 
         function update() {
+            // 坠落动画状态
+            if (gameState === 'falling') {
+                fallTimer++;
+                player.vy += GRAVITY * 1.5;
+                player.y += player.vy;
+
+                // 生成速度线
+                if (fallTimer % 2 === 0) {
+                    fallSpeedLines.push({
+                        x: Math.random() * canvas.width,
+                        y: 0,
+                        len: 25 + Math.random() * 35,
+                        speed: 12 + Math.random() * 10
+                    });
+                }
+                for (let i = fallSpeedLines.length - 1; i >= 0; i--) {
+                    fallSpeedLines[i].y += fallSpeedLines[i].speed;
+                    if (fallSpeedLines[i].y > canvas.height) {
+                        fallSpeedLines.splice(i, 1);
+                    }
+                }
+
+                // 平台向下移出（模拟视角下坠）
+                platforms.forEach(p => p.y -= player.vy * 0.4);
+                springs.forEach(s => s.y -= player.vy * 0.4);
+
+                if (fallTimer > 45 || player.y > canvas.height + 150) {
+                    gameState = 'gameover';
+                }
+                return;
+            }
+
             if (gameState !== 'playing') return;
 
             // 水平移动
-            if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -5.5;
-            else if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = 5.5;
-            else player.vx *= 0.8;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -settings.moveSpeed;
+            else if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = settings.moveSpeed;
+            else player.vx *= 0.78;
 
             player.x += player.vx;
 
-            // 屏幕边缘穿越
+            // 屏幕边缘左右穿越
             if (player.x < -player.r) player.x = canvas.width + player.r;
             else if (player.x > canvas.width + player.r) player.x = -player.r;
 
@@ -174,27 +378,27 @@
             player.vy += GRAVITY;
             player.y += player.vy;
 
-            // 移动平台
+            // 移动平台物理
             platforms.forEach(p => {
                 if (p.type === 'moving') {
                     p.x += p.vx;
-                    if (p.x <= 0 || p.x + PLAT_W >= canvas.width) p.vx = -p.vx;
+                    if (p.x <= 0 || p.x + settings.platW >= canvas.width) p.vx = -p.vx;
                 }
             });
 
             // 弹簧随平台动
             springs.forEach(s => {
-                s.x = s.parent.x + PLAT_W / 2 - 8;
+                s.x = s.parent.x + settings.platW / 2 - 8;
                 s.y = s.parent.y - 10;
             });
 
-            // 下落碰撞检测（仅在向下掉落时有效）
+            // 下落碰撞检测（向下掉落时）
             if (player.vy > 0) {
                 // 弹簧检测
                 springs.forEach(s => {
                     if (player.x + player.r > s.x && player.x - player.r < s.x + s.w) {
-                        if (player.y + player.r >= s.y && player.y + player.r <= s.y + 12) {
-                            player.vy = -14.5; // 超级大跳
+                        if (player.y + player.r >= s.y && player.y + player.r <= s.y + 14) {
+                            player.vy = -14.8; // 超级弹跳
                             playSfx('spring');
                         }
                     }
@@ -202,10 +406,10 @@
 
                 // 平台踩踏检测
                 platforms.forEach(p => {
-                    if (player.x + player.r > p.x && player.x - player.r < p.x + PLAT_W) {
+                    if (player.x + player.r > p.x && player.x - player.r < p.x + settings.platW) {
                         if (player.y + player.r >= p.y && player.y + player.r <= p.y + 14) {
                             if (p.type !== 'broken') {
-                                player.vy = JUMP_FORCE;
+                                player.vy = settings.jumpForce;
                                 playSfx('jump');
                             }
                         }
@@ -213,10 +417,11 @@
                 });
             }
 
-            // 镜头跟随（玩家升过屏幕一半时，场景整体下移）
-            if (player.y < canvas.height / 2) {
-                const diff = (canvas.height / 2) - player.y;
-                player.y = canvas.height / 2;
+            // 镜头跟随（玩家升过屏幕 45% 时，场景整体下移）
+            const threshold = canvas.height * 0.45;
+            if (player.y < threshold) {
+                const diff = threshold - player.y;
+                player.y = threshold;
                 maxHeight += Math.floor(diff);
                 score = maxHeight;
 
@@ -229,20 +434,26 @@
                 platforms.forEach(p => p.y += diff);
                 springs.forEach(s => s.y += diff);
 
-                // 移出底部的平台清理并从上方补新
-                platforms = platforms.filter(p => p.y < canvas.height + 20);
-                springs = springs.filter(s => s.y < canvas.height + 20);
+                // 保底下移缓冲：保留下方深达 500px 的平台，避免掉落时直接落空！
+                platforms = platforms.filter(p => p.y < canvas.height + 500);
+                springs = springs.filter(s => s.y < canvas.height + 500);
 
                 const topY = platforms.reduce((min, p) => Math.min(min, p.y), canvas.height);
-                if (topY > 60) {
+                if (topY > 40) {
                     spawnPlatform(topY - 60);
                 }
             }
 
-            // 掉落死亡
+            // 掉落判定：如果掉过屏幕底部 30px
             if (player.y > canvas.height + 30) {
-                gameState = 'gameover';
-                playSfx('fall');
+                // 检查下方是否还有残留平台可以踩（如果在视野下方不远）
+                const platBelow = platforms.some(p => p.y > canvas.height && p.y < canvas.height + 150 && p.type !== 'broken');
+                if (!platBelow || player.y > canvas.height + 80) {
+                    // 进入平滑坠落状态，播放坠落音效与下落动画
+                    gameState = 'falling';
+                    fallTimer = 0;
+                    playSfx('fall');
+                }
             }
         }
 
@@ -256,28 +467,44 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
+            // 坠落状态下的速度线特效
+            if (gameState === 'falling') {
+                ctx.strokeStyle = 'rgba(0, 200, 255, 0.4)';
+                ctx.lineWidth = 2;
+                fallSpeedLines.forEach(l => {
+                    ctx.beginPath();
+                    ctx.moveTo(l.x, l.y);
+                    ctx.lineTo(l.x, l.y + l.len);
+                    ctx.stroke();
+                });
+            }
+
             // 绘制平台
             platforms.forEach(p => {
-                if (p.type === 'normal') {
-                    ctx.fillStyle = '#10b981';
-                } else if (p.type === 'moving') {
-                    ctx.fillStyle = '#00c8ff';
-                } else if (p.type === 'broken') {
-                    ctx.fillStyle = '#78350f';
+                if (p.y > -20 && p.y < canvas.height + 20) {
+                    if (p.type === 'normal') {
+                        ctx.fillStyle = settings.platColor;
+                    } else if (p.type === 'moving') {
+                        ctx.fillStyle = '#00c8ff';
+                    } else if (p.type === 'broken') {
+                        ctx.fillStyle = '#78350f';
+                    }
+                    ctx.fillRect(p.x, p.y, settings.platW, PLAT_H);
+                    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                    ctx.fillRect(p.x, p.y, settings.platW, 2);
                 }
-                ctx.fillRect(p.x, p.y, PLAT_W, PLAT_H);
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.fillRect(p.x, p.y, PLAT_W, 2);
             });
 
             // 绘制弹簧
             springs.forEach(s => {
-                ctx.fillStyle = '#f59e0b';
-                ctx.fillRect(s.x, s.y, s.w, s.h);
+                if (s.y > -20 && s.y < canvas.height + 20) {
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(s.x, s.y, s.w, s.h);
+                }
             });
 
-            // 绘制玩家小球
-            ctx.fillStyle = '#facc15';
+            // 绘制角色
+            ctx.fillStyle = settings.playerColor;
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
             ctx.fill();
@@ -328,6 +555,67 @@
             preset: 'lr-action'
         });
 
+        // 弹窗与设置函数
+        const modal = document.getElementById('settingsModal');
+        function openSettings() {
+            syncSettingsUI();
+            modal.style.display = 'flex';
+        }
+        function closeSettings() {
+            modal.style.display = 'none';
+        }
+
+        function setPlatW(v, el) {
+            settings.platW = v;
+            highlightOpt('platW', el);
+        }
+        function setJump(v, el) {
+            settings.jumpForce = v;
+            highlightOpt('jump', el);
+        }
+        function setSpring(v, el) {
+            settings.springRate = v;
+            highlightOpt('spring', el);
+        }
+        function setMoveSpeed(v, el) {
+            settings.moveSpeed = v;
+            highlightOpt('moveSpeed', el);
+        }
+
+        function highlightOpt(type, el) {
+            document.querySelectorAll(`.opt-btn[data-type="${type}"]`).forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function syncSettingsUI() {
+            document.querySelectorAll('.opt-btn[data-type]').forEach(b => {
+                const t = b.dataset.type;
+                const v = parseFloat(b.dataset.val);
+                if (t === 'platW' && settings.platW === v) b.classList.add('active');
+                else if (t === 'jump' && Math.abs(settings.jumpForce - v) < 0.1) b.classList.add('active');
+                else if (t === 'spring' && Math.abs(settings.springRate - v) < 0.01) b.classList.add('active');
+                else if (t === 'moveSpeed' && Math.abs(settings.moveSpeed - v) < 0.1) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            document.getElementById('btnDoodlePlayerColor').style.background = settings.playerColor;
+            document.getElementById('btnDoodlePlatColor').style.background = settings.platColor;
+        }
+
+        function saveAndApplySettings() {
+            localStorage.setItem('minigame_doodle_settings', JSON.stringify(settings));
+            closeSettings();
+            resetGame();
+        }
+
+        ColorPicker.attach('#btnDoodlePlayerColor', (hex) => {
+            settings.playerColor = hex;
+        }, settings.playerColor);
+
+        ColorPicker.attach('#btnDoodlePlatColor', (hex) => {
+            settings.platColor = hex;
+        }, settings.platColor);
+
+        syncSettingsUI();
         loop();
     </script>
 </body>
