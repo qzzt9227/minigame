@@ -786,8 +786,11 @@
                     <button class="reader-btn" id="btnCopyMarkdown">
                         <span>📋</span> <span>复制 MD 全文</span>
                     </button>
+                    <button class="reader-btn" id="btnCopyDocLink" title="复制当前文档的直达分享链接">
+                        <span>🔗</span> <span>复制直达链接</span>
+                    </button>
                     <a href="#" target="_blank" class="reader-btn" id="btnViewOnGithub">
-                        <span>🔗</span> <span>在 GitHub 查看</span>
+                        <span>↗</span> <span>在 GitHub 查看</span>
                     </a>
                 </div>
             </div>
@@ -1015,9 +1018,27 @@
 
             renderTabs();
 
-            // 默认选中第一篇
-            if (documentsList.length > 0 && !activeDocId) {
-                selectDocument(documentsList[0].id);
+            // 解析 URL 地址栏中的文档参数 (?doc=... 或 #doc=...)
+            const targetDocIdentifier = getDocIdentifierFromUrl();
+            let initialDoc = null;
+
+            if (targetDocIdentifier) {
+                initialDoc = documentsList.find(d => 
+                    d.filename === targetDocIdentifier || 
+                    d.id === targetDocIdentifier ||
+                    d.title === targetDocIdentifier ||
+                    d.filename.toLowerCase() === targetDocIdentifier.toLowerCase()
+                );
+            }
+
+            // 若无匹配或未传参，默认选中第一篇
+            if (!initialDoc && documentsList.length > 0) {
+                initialDoc = documentsList[0];
+            }
+
+            if (initialDoc) {
+                selectDocument(initialDoc.id, false);
+                syncUrlToAddressBar(initialDoc, true);
             }
 
             updateStatus(`已就绪，共载入 ${documentsList.length} 篇文档`);
@@ -1077,7 +1098,20 @@
 
                 documentsList = newDocs;
                 renderTabs();
-                if (documentsList.length > 0) selectDocument(documentsList[0].id);
+
+                const targetDoc = getDocIdentifierFromUrl();
+                let currentDoc = null;
+                if (targetDoc) {
+                    currentDoc = documentsList.find(d => 
+                        d.filename === targetDoc || 
+                        d.id === targetDoc || 
+                        d.title === targetDoc ||
+                        d.filename.toLowerCase() === targetDoc.toLowerCase()
+                    );
+                }
+                if (!currentDoc && documentsList.length > 0) currentDoc = documentsList[0];
+                if (currentDoc) selectDocument(currentDoc.id, false);
+
                 updateStatus(`🎉 从 GitHub 成功同步 ${documentsList.length} 篇文档`);
                 document.getElementById('labelTotalDocs').textContent = `${documentsList.length} 篇`;
             } catch (err) {
@@ -1153,7 +1187,7 @@
                 `;
 
                 card.addEventListener('click', () => {
-                    selectDocument(doc.id);
+                    selectDocument(doc.id, true);
                 });
 
                 gallery.appendChild(card);
@@ -1163,10 +1197,18 @@
         // ==========================================
         // 6. 文档选中与阅读器更新
         // ==========================================
-        function selectDocument(docId) {
+        function selectDocument(docId, shouldUpdateUrl = true) {
             activeDocId = docId;
             const doc = documentsList.find(d => d.id === docId);
             if (!doc) return;
+
+            // 动态同步浏览器标签页标题
+            document.title = `${doc.title} // 个人文档中心`;
+
+            // 同步无刷新更新浏览器地址栏
+            if (shouldUpdateUrl) {
+                syncUrlToAddressBar(doc, false);
+            }
 
             // 更新选项卡高亮样式
             document.querySelectorAll('.doc-tab-card').forEach(el => {
@@ -1176,6 +1218,9 @@
             // 更新阅读器信息
             document.getElementById('currentDocTitle').innerHTML = `<span>${doc.title}</span>`;
             document.getElementById('currentDocFilename').textContent = doc.filename;
+            if (doc.date && document.getElementById('currentDocUpdated')) {
+                document.getElementById('currentDocUpdated').textContent = doc.date;
+            }
 
             const charCount = doc.content ? doc.content.length : 0;
             const lineCount = doc.content ? doc.content.split('\n').length : 0;
@@ -1194,6 +1239,58 @@
             const readerPanel = document.getElementById('readerPanel');
             if (window.innerWidth < 900) {
                 readerPanel.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // ==========================================
+        // 7. 地址栏 URL 路由与状态同步
+        // ==========================================
+        // 获取地址栏指定的文档标识（支持 ?doc=文件名 或 #doc=文件名 / #文件名）
+        function getDocIdentifierFromUrl() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const queryDoc = params.get('doc');
+                if (queryDoc) {
+                    return decodeURIComponent(queryDoc).trim();
+                }
+            } catch (e) {}
+
+            try {
+                if (window.location.hash) {
+                    let hash = decodeURIComponent(window.location.hash.replace(/^#/, '')).trim();
+                    if (hash.startsWith('doc=')) {
+                        hash = hash.slice(4).trim();
+                    }
+                    if (hash) return hash;
+                }
+            } catch (e) {}
+
+            return null;
+        }
+
+        // 将当前选中的文档动态同步到浏览器地址栏
+        function syncUrlToAddressBar(doc, isReplace = false) {
+            if (!doc) return;
+            const docParam = doc.filename || doc.id;
+
+            try {
+                const currentUrl = new URL(window.location.href);
+                // 参数已一致则不重复 pushState
+                if (currentUrl.searchParams.get('doc') === docParam) {
+                    return;
+                }
+                currentUrl.searchParams.set('doc', docParam);
+
+                if (isReplace) {
+                    window.history.replaceState({ docId: doc.id, filename: doc.filename }, '', currentUrl.toString());
+                } else {
+                    window.history.pushState({ docId: doc.id, filename: doc.filename }, '', currentUrl.toString());
+                }
+            } catch (err) {
+                // file:// 协议或安全受限环境平滑回退至 hash 锚点
+                try {
+                    window.location.hash = 'doc=' + encodeURIComponent(docParam);
+                } catch (e) {}
             }
         }
 
@@ -1232,6 +1329,62 @@
                 setTimeout(() => { this.innerHTML = originalText; }, 2000);
             } catch (err) {
                 alert('复制失败，请手动选择复制');
+            }
+        });
+
+        // 复制当前文档直达分享链接
+        document.getElementById('btnCopyDocLink').addEventListener('click', async function() {
+            const doc = documentsList.find(d => d.id === activeDocId);
+            if (!doc) return;
+
+            try {
+                let shareUrl = window.location.href;
+                try {
+                    const u = new URL(window.location.href);
+                    u.searchParams.set('doc', doc.filename);
+                    shareUrl = u.toString();
+                } catch (e) {}
+
+                await navigator.clipboard.writeText(shareUrl);
+                const originalText = this.innerHTML;
+                this.innerHTML = '<span>✔</span> <span>已复制直达链接</span>';
+                setTimeout(() => { this.innerHTML = originalText; }, 2000);
+            } catch (err) {
+                alert('已自动同步至上方地址栏，可直接复制浏览器地址栏 URL');
+            }
+        });
+
+        // 监听浏览器前进与后退
+        window.addEventListener('popstate', () => {
+            const target = getDocIdentifierFromUrl();
+            if (target) {
+                const found = documentsList.find(d => 
+                    d.filename === target || 
+                    d.id === target || 
+                    d.title === target ||
+                    d.filename.toLowerCase() === target.toLowerCase()
+                );
+                if (found && found.id !== activeDocId) {
+                    selectDocument(found.id, false);
+                }
+            } else if (documentsList.length > 0) {
+                selectDocument(documentsList[0].id, false);
+            }
+        });
+
+        // 兼容 hash 锚点监听
+        window.addEventListener('hashchange', () => {
+            const target = getDocIdentifierFromUrl();
+            if (target) {
+                const found = documentsList.find(d => 
+                    d.filename === target || 
+                    d.id === target || 
+                    d.title === target ||
+                    d.filename.toLowerCase() === target.toLowerCase()
+                );
+                if (found && found.id !== activeDocId) {
+                    selectDocument(found.id, false);
+                }
             }
         });
 
