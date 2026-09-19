@@ -514,6 +514,42 @@ body {
     margin-left: 4px;
 }
 
+/* 文档库直达入口标签 */
+.cat-pill.doc-entrance-pill {
+    background: rgba(0, 200, 255, 0.08);
+    border-color: rgba(0, 200, 255, 0.4);
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.cat-pill.doc-entrance-pill:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #07080c;
+    box-shadow: 0 0 14px var(--primary-glow);
+    transform: translateY(-1px);
+}
+
+.cat-pill.doc-entrance-pill .pill-badge {
+    background: rgba(0, 200, 255, 0.2);
+    color: var(--primary);
+    font-size: 10px;
+    font-family: var(--font-code);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+
+.cat-pill.doc-entrance-pill:hover .pill-badge {
+    background: #07080c;
+    color: var(--primary);
+}
+
 /* ===== 核心卡片矩阵布局 ===== */
 .category-section {
     margin-bottom: 40px;

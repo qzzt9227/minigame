@@ -418,6 +418,16 @@
                     filterCategory(cat.key);
                 });
                 categoryNavContainer.appendChild(btn);
+
+                // 在「🎮 小游戏」标签之后插入「📚 文档库」直达入口按钮
+                if (cat.key === 'games') {
+                    const docBtn = document.createElement('a');
+                    docBtn.className = 'cat-pill doc-entrance-pill';
+                    docBtn.href = 'docs/index.html';
+                    docBtn.title = '进入个人 Markdown 知识库与文档中心';
+                    docBtn.innerHTML = `<span>📚</span> <span>文档库</span> <span class="pill-badge">DOCS ↗</span>`;
+                    categoryNavContainer.appendChild(docBtn);
+                }
             });
         }
 
