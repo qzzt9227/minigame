@@ -194,7 +194,88 @@ minigame-master/
 
 ---
 
-## 4. 运行与验证指令 (Run & Verification)
+## 4. 网站代码全流程工作流 (Full-Lifecycle Website Engineering Workflow)
+
+所有参与本项目网站代码编写的 AI 代理与人类开发者，必须严格遵守以下六阶段标准化全生命周期工作流：
+
+```mermaid
+flowchart LR
+    A["Stage 1<br/>需求拆解与架构设计"] --> B["Stage 2<br/>样式系统与视觉规范"]
+    B --> C["Stage 3<br/>高质量原生代码编写"]
+    C --> D["Stage 4<br/>全端适配与交互复用"]
+    D --> E["Stage 5<br/>语法自检与本地验证"]
+    E --> F["Stage 6<br/>文档同步与双分支推送"]
+```
+
+### 4.1 阶段一：需求拆解与技术预研 (Stage 1: Intent & Pre-flight Checklist)
+1. **意图精准定位**：明确需求属于「导航主站 (`dist/index.html`)」、「多格式文档中心 (`dist/docs/`)」还是「独立小游戏 (`dist/games/`)」，避免跨模块无序修改。
+2. **Zero-Build 合规自检**：
+   - 严禁引入 Webpack/Vite/Rollup 等构建工具或脚手架；
+   - 若需第三方能力（如 Word 解析、Excel 处理、3D 渲染），优先评估轻量纯前端单文件版本（通过可靠 CDN 引入 `mammoth.browser.min.js`、`xlsx.full.min.js`、`three.min.js r128`），并确保支持离线或优雅降级。
+3. **状态拓扑与路由规范**：
+   - 确定数据持久化方案，LocalStorage 键名统一前缀（如 `cyber_nav_*`, `minigame_*`）；
+   - URL 参数必须遵循解耦设计（如文档中心强制使用纯数字编号 `?doc=1`，绝不泄露文档原始物理文件名）。
+
+### 4.2 阶段二：UI/UX 规范与样式系统 (Stage 2: Design Tokens & CSS Architecture)
+1. **赛博高对比度设计语言 (Cyber Dark Theme)**：
+   - 严格继承并复用根样式变量：`--primary: #00c8ff`, `--accent: #f43f5e`, `--neon-green: #00ff9d`, `--bg-dark: #07090e`, `--bg-panel: #0d111a`, `--border-color: #1a2336`。
+   - 面板几何质感：优先采用纯 CSS `clip-path: polygon(...)` 构造科技感切角多边形，杜绝生硬平铺。
+2. **现代 CSS 原生能力最大化**：
+   - 布局首选 Flexbox 与 CSS Grid，严禁使用陈旧的浮动布局（Float）；
+   - 广泛运用 CSS 变量、`:has()` 伪类、`backdrop-filter: blur(...)` 营造高通透毛玻璃质感。
+3. **60 FPS 流畅动效基准**：
+   - 动画与过度仅操作 `transform` 与 `opacity`，避免引发全局 Reflow 重排；
+   - 背景 Canvas 网络粒子密度自适应视口面积计算，保证极低 CPU/GPU 占用。
+
+### 4.3 阶段三：高质量原生编码规范 (Stage 3: Idiomatic Frontend Engineering)
+1. **语义化与无障碍 HTML**：
+   - 使用 `<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<footer>` 构建语义化层级；
+   - 关键操作按钮具备清晰的 `title` 或 `aria-label`。
+2. **纯粹、清晰的 JavaScript (ES6+) 架构**：
+   - **关注点分离**：纯函数置于边缘（数据格式化、数值计算、URL 解析、Markdown 解析），副作用与 DOM 操作集中控制；
+   - **错误即值与防御性编程**：
+     - 所有异步 `fetch`、`JSON.parse`、`localStorage` 操作必须包裹 `try...catch`；
+     - 网络断开或第三方 CDN 加载失败时，必须提供可视化的优雅降级（Fallback Banner/一键下载按钮），严禁静默白屏；
+   - **性能与内存管理**：
+     - 高频事件（如 `input`, `resize`, `scroll`）必须加入防抖（Debounce）或节流（Throttle）；
+     - 生成临时对象 URL（`URL.createObjectURL`）后必须在下载完成或销毁时主动调用 `URL.revokeObjectURL` 释放内存。
+
+### 4.4 阶段四：全端适配与模块交互复用 (Stage 4: Responsive & Component Reuse)
+1. **移动端第一与触控友好**：
+   - 触摸交互目标尺寸严格 $\ge 44 \times 44\text{px}$；
+   - 触摸区域注入 `touch-action: none` 或 `touch-action: manipulation` 防止双击缩放或页面误滑动。
+2. **组件与公共库强制复用铁律**：
+   - **触屏控制器**：小游戏必须统一接入 `dist/games/shared/touch-controller.js`，通过 `TouchController.init(...)` 初始化，禁止在各个游戏单独重复编写虚拟按键 CSS。
+   - **色彩挑选器**：调色场景统一接入 `dist/games/shared/color-picker.js`，通过 `ColorPicker.attach(...)` 调用。
+   - **音效合成机制**：所有小游戏音效必须使用 Web Audio API 原生纯代码动态合成（振荡器与增益节点），禁止引入外部体积臃肿的 mp3/wav 静态资源。
+   - **双向导航返回链**：所有独立游戏及文档子页面，必须标配双向导航（`← 游戏大厅`、`⌂ 导航中枢`）。
+
+### 4.5 阶段五：严密自检与本地验证 (Stage 5: Quality Assurance & Verification)
+1. **静态服务与多视口验证**：
+   - 任选方案启动：`npm start` / `npx serve dist` / `python -m http.server 8080 -d dist`；
+   - 检查控制台（Console）输出：**零报错、零未捕获异常、零 404 资源丢失**。
+2. **语法无死角校验**：
+   - 任何涉及 HTML 内联 `<script>` 或独立 `.js` 的改动，必须使用 Node.js (`node -c` 或 AST/Function 语法提取) 预先运行语法无错自检。
+3. **多格式文档深度预览与下载闭环**：
+   - 验证 Markdown (.md)、纯文本 (.txt)、Word (.docx)、Excel (.xlsx)、PDF (.pdf) 五大格式的在线解析渲染是否正常；
+   - 验证「一键下载文档」针对各格式能否通过二进制 `Blob` 正确触发本地文件下载且内容完好无损。
+4. **数字路由自检**：
+   - 验证打开文档时上方地址栏是否保持纯数字编号（`?doc=1`），确认地址栏绝无泄露文档文件名。
+
+### 4.6 阶段六：文档同步与双分支推送 (Stage 6: Docs Sync & Dual-Branch Git Sync)
+1. **同步更新 AGENTS.md**：
+   - 功能新增、配置变更或数据结构调整后，必须同步修改更新本文件对应章节。
+2. **自动化元数据同步**：
+   - 涉及文档增删改时，运行 `node scripts/sync-docs.js` 自动刷新 `manifest.json` 与数字编号。
+3. **Git 规范双分支推送**：
+   - 执行 `git status` 确认工作区变更；
+   - 执行 `git add .`；
+   - 编写遵循 Conventional Commits 的规范 commit 消息（如 `feat: ...`, `fix: ...`, `docs: ...`）；
+   - **核心铁律**：同时推送到 `origin master` 与 `origin main` 保持双分支 100% 绝对一致。
+
+---
+
+## 5. 运行与验证指令 (Run & Verification)
 
 纯静态无构建模式，任选以下一种方式即可启动预览：
 
@@ -212,7 +293,7 @@ python -m http.server 8080 -d dist
 
 ---
 
-## 5. 开发者与 AI 代理规范 (Agent Development Guidelines)
+## 6. 开发者与 AI 代理规范 (Agent Development Guidelines)
 
 后续所有接入该项目的 AI 代理及协作者必须严格遵守以下规则：
 
@@ -236,3 +317,6 @@ python -m http.server 8080 -d dist
      - `npm run push-docs`：刷新多格式索引并立即双推至 `origin master` 和 `origin main`。
      - `npm run watch-docs`（或双击 `scripts/watch-docs.bat`）：后台守护监听，检测到新文档文件时 1.5 秒防抖自动双分支推送。
    - **代理执行要求**：AI 代理只要检测到 `dist/docs/content/` 有文件变动，必须执行全流程（索引更新 + git commit + push master + push main）。
+6. **文档固定数字编号与无文件名地址栏铁律**：
+   - 严禁在页面打开文档时将文档真实文件名写入地址栏；
+   - 统一使用 `docNo` 纯数字路由（`?doc=1`），外部链接访问带文件名必须自动静默重写规范化为纯数字编号。
