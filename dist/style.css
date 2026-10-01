@@ -642,6 +642,50 @@ body {
     }
 }
 
+/* ===== 开源仓库专属横幅 ===== */
+.repos-hero-banner {
+    background: linear-gradient(135deg, rgba(14, 20, 32, 0.95), rgba(20, 28, 44, 0.7));
+    border: 1px solid var(--border-bright);
+    clip-path: var(--clip-angle-md);
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.repos-hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.repos-hero-banner .banner-actions {
+    flex-shrink: 0;
+}
+
+@media (max-width: 680px) {
+    .repos-hero-banner {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 18px 20px;
+    }
+    .repos-hero-banner .banner-btn {
+        text-align: center;
+        justify-content: center;
+        width: 100%;
+    }
+}
+
 .category-title {
     font-family: var(--font-heading);
     font-size: 18px;
@@ -834,6 +878,90 @@ body {
 
 .card-action-btn.delete:hover {
     color: #ff4757;
+}
+
+/* ===== 开源仓库卡片定制 ===== */
+.nav-card.repo-card {
+    border-color: rgba(var(--primary-rgb), 0.25);
+    background: linear-gradient(180deg, rgba(16, 20, 30, 0.95) 0%, rgba(11, 14, 22, 0.95) 100%);
+}
+
+.nav-card.repo-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px var(--primary-glow);
+}
+
+.card-icon.repo-octo-icon {
+    background: rgba(var(--primary-rgb), 0.12);
+    border-color: rgba(var(--primary-rgb), 0.4);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.repo-topics-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.repo-topic-tag {
+    font-size: 10px;
+    font-family: var(--font-code);
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 1px 6px;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.15s ease;
+}
+
+.nav-card.repo-card:hover .repo-topic-tag {
+    color: var(--primary);
+    border-color: rgba(var(--primary-rgb), 0.35);
+    background: rgba(var(--primary-rgb), 0.08);
+}
+
+.repo-meta-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    font-family: var(--font-code);
+}
+
+.repo-lang-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-muted);
+}
+
+.repo-lang-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.repo-star-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #f8c02a;
+    font-weight: 600;
+}
+
+.card-action-btn.copy-clone-btn {
+    opacity: 0.75;
+}
+
+.card-action-btn.copy-clone-btn:hover {
+    opacity: 1;
+    color: var(--primary);
+    transform: scale(1.1);
 }
 
 /* 隐藏未匹配卡片 */

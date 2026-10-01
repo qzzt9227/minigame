@@ -15,6 +15,53 @@
     // 1. 内置精品导航数据 (Preset Bookmarks)
     // ==========================================
     const DEFAULT_BOOKMARKS = [
+        // GitHub 开源仓库矩阵 (GitHub Repositories)
+        { 
+            id: 'repo_items_tweaks', 
+            title: 'Items-Tweaks', 
+            url: 'https://github.com/qzzt9227/Items-Tweaks', 
+            desc: 'Minecraft 原版细节优化与功能增强模组 (Fabric)，全面改善原版交互体验与便利性', 
+            cat: 'repos', 
+            badge: 'FABRIC', 
+            icon: 'IT', 
+            repo: 'qzzt9227/Items-Tweaks',
+            lang: 'Java',
+            stars: 4,
+            forks: 0,
+            topics: ['Minecraft', 'Fabric', 'Mod', 'Tweaks'],
+            clicks: 0 
+        },
+        { 
+            id: 'repo_dfpubbin', 
+            title: 'DfPubBin', 
+            url: 'https://github.com/qzzt9227/DfPubBin', 
+            desc: 'Minecraft Paper/Spigot 高性能服务器垃圾桶插件，公共/私人双模式、稀有物品检测与自动清理', 
+            cat: 'repos', 
+            badge: 'PAPER', 
+            icon: 'DP', 
+            repo: 'qzzt9227/DfPubBin',
+            lang: 'Java',
+            stars: 2,
+            forks: 0,
+            topics: ['Minecraft', 'PaperMC', 'Spigot', 'Plugin'],
+            clicks: 0 
+        },
+        { 
+            id: 'repo_edge_client', 
+            title: 'edge-client', 
+            url: 'https://github.com/qzzt9227/edge-client', 
+            desc: 'Minecraft 26.2 纯客户端 Fabric 模组基础架构，模块化功能、声明式配置与 Click GUI API', 
+            cat: 'repos', 
+            badge: 'CLIENT', 
+            icon: 'EC', 
+            repo: 'qzzt9227/edge-client',
+            lang: 'Java',
+            stars: 0,
+            forks: 0,
+            topics: ['Minecraft', 'Fabric', 'Client', 'GUI-API'],
+            clicks: 0 
+        },
+
         // AI 智能中枢
         { id: 'p1', title: 'ChatGPT', url: 'https://chatgpt.com', desc: 'OpenAI 旗舰语言模型与对话系统', cat: 'ai', badge: 'LLM', icon: 'GPT', clicks: 0 },
         { id: 'p2', title: 'Claude', url: 'https://claude.ai', desc: 'Anthropic 出品，高智力长上下文与代码推理', cat: 'ai', badge: 'PRO', icon: 'CL', clicks: 0 },
@@ -82,6 +129,7 @@
 
     const CATEGORIES = [
         { key: 'all', name: '全部', badge: 'ALL' },
+        { key: 'repos', name: '🐙 开源仓库', badge: 'REPOS' },
         { key: 'ai', name: 'AI 工具', badge: 'AI' },
         { key: 'dev', name: '开发者生态', badge: 'DEV' },
         { key: 'design', name: '设计与视效', badge: 'DESIGN' },
@@ -333,8 +381,10 @@
                 const title = (card.dataset.title || '').toLowerCase();
                 const desc = (card.dataset.desc || '').toLowerCase();
                 const host = (card.dataset.host || '').toLowerCase();
+                const topics = (card.dataset.topics || '').toLowerCase();
+                const repo = (card.dataset.repo || '').toLowerCase();
 
-                const isMatch = title.includes(query) || desc.includes(query) || host.includes(query);
+                const isMatch = title.includes(query) || desc.includes(query) || host.includes(query) || topics.includes(query) || repo.includes(query);
                 if (isMatch) {
                     card.classList.remove('hidden');
                     matchCount++;
@@ -456,6 +506,24 @@
 
             const grid = section.querySelector('.card-grid');
 
+            if (cat.key === 'repos') {
+                const banner = document.createElement('div');
+                banner.className = 'repos-hero-banner';
+                banner.innerHTML = `
+                    <div class="banner-left">
+                        <div class="banner-tag">OPEN SOURCE // GITHUB SHOWCASE</div>
+                        <h3 class="banner-title">GitHub 开源仓库矩阵</h3>
+                        <p class="banner-desc">精心维护的个人开源项目与模组插件集合（Minecraft Fabric 模组、Paper 服务器插件、纯客户端框架），支持实时星标同步、一键克隆与源码直达。</p>
+                    </div>
+                    <div class="banner-right-actions">
+                        <a href="https://github.com/qzzt9227?tab=repositories" class="cyber-btn primary banner-btn" target="_blank" rel="noopener noreferrer">
+                            <span>🐙</span> <span>全部仓库 (GitHub)</span> <span>↗</span>
+                        </a>
+                    </div>
+                `;
+                section.insertBefore(banner, grid);
+            }
+
             if (cat.key === 'games') {
                 const banner = document.createElement('div');
                 banner.className = 'games-hero-banner';
@@ -492,11 +560,15 @@
         if (activeCategory !== 'all') {
             filterCategory(activeCategory);
         }
+
+        // 异步静默同步 GitHub 仓库星标与最新数据
+        syncGitHubRepoStats();
     }
 
     function createCardElement(item) {
         const card = document.createElement('a');
-        card.className = 'nav-card';
+        const isRepo = item.cat === 'repos' || Boolean(item.repo);
+        card.className = 'nav-card' + (isRepo ? ' repo-card' : '');
         card.href = item.url;
         card.target = '_blank';
         card.rel = 'noopener noreferrer';
@@ -505,31 +577,99 @@
         card.dataset.desc = item.desc;
         card.dataset.host = getDomainHost(item.url);
         card.dataset.cat = item.cat;
+        card.dataset.topics = (item.topics || []).join(' ');
+        card.dataset.repo = item.repo || '';
 
         const isCustom = String(item.id).startsWith('c_');
         const badgeHtml = item.badge ? `<span class="card-badge">${item.badge}</span>` : '';
         const host = getDomainHost(item.url);
 
-        card.innerHTML = `
-            <div>
-                <div class="card-top">
-                    <div class="card-icon">${item.icon || item.title.slice(0, 2).toUpperCase()}</div>
-                    <div class="card-meta">
-                        <div class="card-title-row">
-                            <span class="card-title" title="${item.title}">${item.title}</span>
-                            ${badgeHtml}
+        if (isRepo) {
+            const langColorMap = {
+                'Java': '#b07219',
+                'JavaScript': '#f1e05a',
+                'TypeScript': '#3178c6',
+                'Python': '#3572A5',
+                'HTML': '#e34c26',
+                'CSS': '#563d7c'
+            };
+            const langColor = (item.lang && langColorMap[item.lang]) ? langColorMap[item.lang] : 'var(--primary)';
+            const topicsHtml = (item.topics && item.topics.length > 0)
+                ? `<div class="repo-topics-wrap">${item.topics.map(t => `<span class="repo-topic-tag">#${t}</span>`).join('')}</div>`
+                : '';
+
+            card.innerHTML = `
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon repo-octo-icon">${item.icon || 'GH'}</div>
+                        <div class="card-meta">
+                            <div class="card-title-row">
+                                <span class="card-title" title="${item.title}">${item.title}</span>
+                                ${badgeHtml}
+                            </div>
+                            <p class="card-desc" title="${item.desc}">${item.desc}</p>
                         </div>
-                        <p class="card-desc" title="${item.desc}">${item.desc}</p>
+                    </div>
+                    ${topicsHtml}
+                </div>
+                <div class="card-bottom">
+                    <div class="repo-meta-group">
+                        <span class="repo-lang-indicator">
+                            <span class="repo-lang-dot" style="background-color: ${langColor};"></span>
+                            <span>${item.lang || 'Code'}</span>
+                        </span>
+                        <span class="repo-star-stat" data-repo-stars="${item.repo || ''}" title="GitHub Stars">
+                            ⭐ <span class="star-count">${item.stars ?? 0}</span>
+                        </span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="card-action-btn copy-clone-btn" title="一键复制 git clone 命令" type="button">📋</button>
+                        ${isCustom ? `<button class="card-action-btn delete" title="删除书签" data-del="${item.id}" type="button">✕</button>` : ''}
                     </div>
                 </div>
-            </div>
-            <div class="card-bottom">
-                <span class="card-host">${host}</span>
-                <div class="card-actions">
-                    ${isCustom ? `<button class="card-action-btn delete" title="删除书签" data-del="${item.id}">✕</button>` : ''}
+            `;
+
+            // 监听复制 clone 命令
+            const copyCloneBtn = card.querySelector('.copy-clone-btn');
+            if (copyCloneBtn) {
+                copyCloneBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const cloneUrl = item.url.endsWith('.git') ? item.url : (item.url + '.git');
+                    const cloneCmd = `git clone ${cloneUrl}`;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(cloneCmd).then(() => {
+                            showToast(`已复制: ${cloneCmd}`);
+                        }).catch(() => {
+                            prompt('请手动复制命令:', cloneCmd);
+                        });
+                    } else {
+                        prompt('请手动复制命令:', cloneCmd);
+                    }
+                });
+            }
+        } else {
+            card.innerHTML = `
+                <div>
+                    <div class="card-top">
+                        <div class="card-icon">${item.icon || item.title.slice(0, 2).toUpperCase()}</div>
+                        <div class="card-meta">
+                            <div class="card-title-row">
+                                <span class="card-title" title="${item.title}">${item.title}</span>
+                                ${badgeHtml}
+                            </div>
+                            <p class="card-desc" title="${item.desc}">${item.desc}</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
+                <div class="card-bottom">
+                    <span class="card-host">${host}</span>
+                    <div class="card-actions">
+                        ${isCustom ? `<button class="card-action-btn delete" title="删除书签" data-del="${item.id}" type="button">✕</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
 
         // 点击增加点击计数
         card.addEventListener('click', (e) => {
@@ -579,8 +719,61 @@
     }
 
     // ==========================================
-    // 7. 自定义书签 CRUD
+    // 7. 自定义书签 CRUD & GitHub 同步
     // ==========================================
+    function syncGitHubRepoStats() {
+        const repoCards = document.querySelectorAll('.nav-card[data-repo]');
+        if (!repoCards || repoCards.length === 0) return;
+
+        const CACHE_KEY_PREFIX = 'cyber_repo_cache_';
+        const CACHE_TTL = 30 * 60 * 1000; // 30 分钟缓存
+
+        repoCards.forEach(card => {
+            const repoPath = card.dataset.repo;
+            if (!repoPath) return;
+
+            const starEl = card.querySelector(`[data-repo-stars="${repoPath}"] .star-count`);
+            
+            // 尝试读取本地缓存
+            try {
+                const cachedRaw = localStorage.getItem(CACHE_KEY_PREFIX + repoPath);
+                if (cachedRaw) {
+                    const cached = JSON.parse(cachedRaw);
+                    if (Date.now() - cached.time < CACHE_TTL) {
+                        if (starEl && typeof cached.stars === 'number') {
+                            starEl.textContent = cached.stars;
+                        }
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // 若无缓存或已过期，异步请求 GitHub API
+            fetch(`https://api.github.com/repos/${repoPath}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('API limit or error');
+                    return res.json();
+                })
+                .then(data => {
+                    if (typeof data.stargazers_count === 'number') {
+                        if (starEl) {
+                            starEl.textContent = data.stargazers_count;
+                        }
+                        try {
+                            localStorage.setItem(CACHE_KEY_PREFIX + repoPath, JSON.stringify({
+                                stars: data.stargazers_count,
+                                forks: data.forks_count,
+                                time: Date.now()
+                            }));
+                        } catch (e) {}
+                    }
+                })
+                .catch(() => {
+                    // 静默降级，保持预设数值
+                });
+        });
+    }
+
     function saveCustomBookmarks() {
         localStorage.setItem('cyber_nav_custom_bookmarks', JSON.stringify(customBookmarks));
     }
@@ -590,14 +783,24 @@
             url = 'https://' + url;
         }
 
+        let repo = '';
+        if (cat === 'repos' || url.includes('github.com/')) {
+            const match = url.match(/github\.com\/([^\/]+\/[^\/\?#]+)/);
+            if (match) repo = match[1];
+        }
+
         const newBookmark = {
             id: 'c_' + Date.now(),
             title: title.trim(),
             url: url.trim(),
-            cat: cat || 'custom',
-            desc: desc.trim() || '自定义网址',
-            badge: badge.trim().toUpperCase() || 'CUSTOM',
+            cat: cat || (repo ? 'repos' : 'custom'),
+            desc: desc.trim() || (repo ? `GitHub 仓库: ${repo}` : '自定义网址'),
+            badge: badge.trim().toUpperCase() || (repo ? 'REPO' : 'CUSTOM'),
             icon: title.trim().slice(0, 2).toUpperCase(),
+            repo: repo,
+            lang: repo ? 'Code' : '',
+            stars: 0,
+            topics: repo ? ['GitHub'] : [],
             clicks: 0
         };
 

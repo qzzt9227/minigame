@@ -192,6 +192,19 @@ minigame-master/
 - 支持代码草稿、Token、临时文字的高效记事本。
 - 内容实时 `input` 事件静默写入 `cyber_nav_scratchpad`，带实时字符统计与一键复制。
 
+### 3.8 开源仓库展示模块与动态同步机制 (GitHub Repositories Showcase & Modular Ecosystem)
+- **设计初衷**：在原有通用书签基础上，开辟专属的开源仓库展示分类（`cat: 'repos'`），以高质感模块化卡片及专属 Hero 横幅集中展示个人开源作品（如 Minecraft Fabric 模组、Paper 服务器插件、纯客户端框架等）。
+- **模块化特性**：
+  1. **专用 Hero Banner (`.repos-hero-banner`)**：科技感赛博渐变与切角多边形面板，突出开源作品矩阵，标配一键直达 GitHub Profile 的快捷动作按钮。
+  2. **专属仓库卡片组件 (`.nav-card.repo-card`)**：
+     - **语言与技术栈标签**：展示专属语言圆点指示器（如 Java `#b07219`）与多维 Topics 标签（如 `#Fabric`, `#Minecraft`, `#Tweaks`, `#PaperMC` 等）；
+     - **星标数值展示**：标配高光金黄 ⭐ 星标计数徽章；
+     - **一键克隆命令快捷复制**：点击卡片右下角 `📋` 快捷按钮自动将 `git clone <repo>.git` 写入剪贴板并弹出 Toast 反馈，阻止冒泡不干扰主卡片新标签页直达；
+     - **搜索深度联动**：支持在全局搜索框中按标签（`#Fabric`）、仓库名（`Items-Tweaks`）、开发者或描述进行毫秒级模糊过滤。
+  3. **静默后台 API 同步 (`syncGitHubRepoStats`)**：
+     - **零延迟秒开**：首屏优先使用预设星标与描述，绝对不阻塞主界面渲染；
+     - **智能本地缓存机制**：基于 `localStorage` 维护 30 分钟缓存过期策略，避免触发 GitHub API 未认证频率限制（60次/小时），网络错误时静默降级。
+
 ---
 
 ## 4. 网站代码全流程工作流 (Full-Lifecycle Website Engineering Workflow)
