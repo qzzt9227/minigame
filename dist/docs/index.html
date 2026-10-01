@@ -487,6 +487,38 @@
             color: var(--primary);
             border-color: var(--primary);
         }
+        .reader-btn.primary-dl {
+            background: rgba(0, 255, 157, 0.12);
+            border-color: rgba(0, 255, 157, 0.4);
+            color: var(--neon-green);
+        }
+        .reader-btn.primary-dl:hover {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            color: #05080f;
+            box-shadow: 0 0 14px rgba(0, 255, 157, 0.4);
+        }
+
+        .tab-card-dl-btn {
+            background: rgba(0, 255, 157, 0.08);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            color: var(--neon-green);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tab-card-dl-btn:hover {
+            background: var(--neon-green);
+            color: #07090e;
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.35);
+        }
 
         /* 渲染后 Markdown 正文样式 */
         .markdown-body {
@@ -780,6 +812,9 @@
                 </div>
 
                 <div class="reader-actions">
+                    <button class="reader-btn primary-dl" id="btnDownloadDoc" title="一键从 GitHub 仓库下载该 Markdown 文档">
+                        <span>📥</span> <span>一键下载文档</span>
+                    </button>
                     <button class="reader-btn" id="btnToggleRaw">
                         <span>👁️</span> <span>查看源码</span>
                     </button>
@@ -1182,7 +1217,12 @@
 
                     <div class="tab-card-footer">
                         <span>📄 ${doc.filename}</span>
-                        <span class="tab-action-hint">阅读全文 →</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="tab-card-dl-btn" data-doc-id="${doc.id}" title="一键从仓库下载该文档">
+                                <span>📥</span> <span>下载</span>
+                            </button>
+                            <span class="tab-action-hint">阅读全文 →</span>
+                        </div>
                     </div>
                 `;
 
@@ -1191,6 +1231,18 @@
                 });
 
                 gallery.appendChild(card);
+            });
+
+            // 绑定卡片内部的一键下载快捷按钮
+            gallery.querySelectorAll('.tab-card-dl-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const docId = btn.dataset.docId;
+                    const targetDoc = documentsList.find(d => d.id === docId);
+                    if (targetDoc) {
+                        downloadDocument(targetDoc, btn);
+                    }
+                });
             });
         }
 
@@ -1315,6 +1367,86 @@
             document.getElementById('rawSourceArea').style.display = isRawView ? 'block' : 'none';
             this.classList.toggle('active', isRawView);
             this.innerHTML = isRawView ? '<span>📄</span> <span>查看渲染</span>' : '<span>👁️</span> <span>查看源码</span>';
+        });
+
+        // ==========================================
+        // 8. 仓库文档一键下载核心逻辑
+        // ==========================================
+        async function downloadDocument(doc, triggerBtn = null) {
+            if (!doc) return;
+            const originalBtnHtml = triggerBtn ? triggerBtn.innerHTML : null;
+
+            if (triggerBtn) {
+                triggerBtn.disabled = true;
+                triggerBtn.innerHTML = '<span>⏳</span> <span>正在从仓库拉取...</span>';
+            }
+
+            const { owner, repo, branch, path } = currentConfig;
+            // 仓库原生下载源 (GitHub Raw 规范直链与本地仓库路径)
+            const repoPath = doc.path || `${path}/${doc.filename}`;
+            const repoRawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${repoPath}`;
+            const localUrl = encodeURI(doc.path || `content/${doc.filename}`);
+
+            let contentToDownload = '';
+
+            try {
+                // 1. 优先尝试从 GitHub 仓库源直拉最新版本
+                const response = await fetch(repoRawUrl);
+                if (response.ok) {
+                    contentToDownload = await response.text();
+                } else {
+                    throw new Error('Raw HTTP ' + response.status);
+                }
+            } catch (err) {
+                console.warn('从 GitHub Raw 直拉失败，尝试从本地仓库副本读取:', err);
+                try {
+                    // 2. 本地相对路径回退（本地部署或离线环境）
+                    const localRes = await fetch(localUrl);
+                    if (localRes.ok) {
+                        contentToDownload = await localRes.text();
+                    } else {
+                        throw new Error('Local HTTP ' + localRes.status);
+                    }
+                } catch (e2) {
+                    // 3. 使用内存缓存中已加载的内容
+                    contentToDownload = doc.content || '';
+                }
+            }
+
+            if (!contentToDownload) {
+                alert('无法从仓库获取文档内容，请检查网络或仓库配置');
+                if (triggerBtn && originalBtnHtml) {
+                    triggerBtn.disabled = false;
+                    triggerBtn.innerHTML = originalBtnHtml;
+                }
+                return;
+            }
+
+            // 触发浏览器标准下载
+            const blob = new Blob([contentToDownload], { type: 'text/markdown;charset=utf-8' });
+            const blobUrl = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = blobUrl;
+            downloadLink.download = doc.filename.endsWith('.md') ? doc.filename : `${doc.filename}.md`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+
+            if (triggerBtn) {
+                triggerBtn.innerHTML = '<span>✔</span> <span>已开始下载</span>';
+                setTimeout(() => {
+                    triggerBtn.disabled = false;
+                    triggerBtn.innerHTML = originalBtnHtml;
+                }, 2000);
+            }
+        }
+
+        // 顶部工具栏一键下载按钮
+        document.getElementById('btnDownloadDoc').addEventListener('click', function() {
+            const doc = documentsList.find(d => d.id === activeDocId);
+            if (!doc) return;
+            downloadDocument(doc, this);
         });
 
         // 复制 Markdown 全文

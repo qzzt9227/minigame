@@ -151,6 +151,9 @@ minigame-master/
     - 点击或切换文档时，地址栏自动通过 `history.pushState` 无刷新同步为 `?doc=<文件名>`（如 `?doc=走进科技馆，放飞科技梦.md`）。
     - 外部访问直接输入或分享带 `?doc=` 或 `#doc=` 的 URL，页面秒级定位并高亮渲染对应文档。
     - 完整支持浏览器前进/后退（`popstate` / `hashchange`）导航与一键复制直达链接。
+  - **仓库源原生一键下载文档 (One-Click Repo Document Download)**：
+    - 阅读器顶部工具栏提供醒目的「📥 一键下载文档」按钮，每个选项卡卡片底部亦标配「📥 下载」快捷入口。
+    - 下载源严格绑定 GitHub 仓库：优先从 GitHub Raw 直链拉取最新源文件，自动回退本地仓库副本，利用标准 UTF-8 Markdown Blob 触发浏览器本地保存，规避跨域限制。
 
 ### 3.5 视觉层与交互背景
 - **Canvas 节点交互网络** (`#canvasBackground`)：
