@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>个人文档中心 // Markdown 知识库</title>
+    <title>个人文档中心 // 知识库与多格式文档预览 (MD / TXT / Word / PDF / Excel)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 客户端零构建文档解析引擎: Word (.docx) & Excel (.xlsx, .csv) -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -641,6 +645,223 @@
             overflow: auto;
         }
 
+        /* ===== 多格式徽章颜色扩展 ===== */
+        .tab-badge.WORD { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); }
+        .tab-badge.EXCEL { background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.4); }
+        .tab-badge.PDF { background: rgba(244, 63, 94, 0.12); color: #f43f5e; border-color: rgba(244, 63, 94, 0.4); }
+        .tab-badge.TXT { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+
+        /* ===== 多格式预览专属容器样式 ===== */
+        
+        /* 1. Word (.docx) 渲染样式 */
+        .word-doc-wrapper {
+            background: #0d1017;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .word-doc-header {
+            background: #141926;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .word-doc-header .badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: var(--font-code);
+        }
+        .word-doc-content {
+            padding: 28px 32px;
+            color: #cbd5e1;
+            font-size: 15px;
+            line-height: 1.8;
+            max-width: 960px;
+        }
+        .word-doc-content h1, .word-doc-content h2, .word-doc-content h3 {
+            color: #fff;
+            margin: 20px 0 12px;
+            font-family: var(--font-heading);
+        }
+        .word-doc-content h1 { font-size: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; }
+        .word-doc-content h2 { font-size: 20px; }
+        .word-doc-content h3 { font-size: 17px; color: var(--primary); }
+        .word-doc-content p { margin-bottom: 14px; }
+        .word-doc-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            background: #10141f;
+        }
+        .word-doc-content th, .word-doc-content td {
+            border: 1px solid #232c40;
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+        .word-doc-content th { background: #161c2c; color: #fff; font-weight: 600; }
+
+        /* 2. Excel (.xlsx / .xls / .csv) 表格样式 */
+        .excel-sheets-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: #0f131c;
+            border: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+            border-bottom: none;
+            overflow-x: auto;
+        }
+        .excel-sheet-pill {
+            background: #171d2b;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: var(--font-heading);
+            padding: 5px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .excel-sheet-pill:hover {
+            color: #fff;
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .excel-sheet-pill.active {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: #10b981;
+            color: #10b981;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+        }
+        .excel-table-scroll-wrap {
+            overflow: auto;
+            max-height: 720px;
+            border: 1px solid var(--border-color);
+            background: #090c12;
+            border-radius: 0 0 8px 8px;
+        }
+        .excel-cyber-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-code);
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+        .excel-cyber-table th, .excel-cyber-table td {
+            border: 1px solid #1c2333;
+            padding: 8px 14px;
+            white-space: nowrap;
+        }
+        .excel-cyber-table th {
+            background: #131824;
+            color: var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .excel-cyber-table .row-index-cell {
+            background: #10141f;
+            color: var(--text-dim);
+            text-align: center;
+            font-size: 11px;
+            user-select: none;
+            position: sticky;
+            left: 0;
+            z-index: 1;
+        }
+        .excel-cyber-table tr:hover td {
+            background: rgba(0, 200, 255, 0.04);
+            color: #fff;
+        }
+
+        /* 3. PDF (.pdf) 视口样式 */
+        .pdf-viewer-wrap {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #090c12;
+        }
+        .pdf-top-actions {
+            background: #111520;
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .pdf-fullscreen-btn {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: #f43f5e;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+        .pdf-fullscreen-btn:hover {
+            background: #f43f5e;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+        }
+        .pdf-iframe-viewer {
+            width: 100%;
+            height: 800px;
+            border: none;
+            background: #1e2433;
+        }
+
+        /* 4. 纯文本 (.txt) 查看样式 */
+        .txt-content-wrap {
+            background: #090c13;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            font-family: var(--font-code);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+        .txt-line-numbers {
+            background: #0f131d;
+            border-right: 1px solid #1b2333;
+            padding: 16px 10px;
+            color: var(--text-dim);
+            text-align: right;
+            user-select: none;
+            font-size: 12px;
+            min-width: 42px;
+        }
+        .txt-body-code {
+            padding: 16px 20px;
+            color: #e2e8f0;
+            overflow-x: auto;
+            white-space: pre;
+            flex: 1;
+            margin: 0;
+        }
+
         /* 仓库设置弹窗 */
         .settings-modal {
             position: fixed;
@@ -718,8 +939,8 @@
             <div class="header-brand">
                 <span class="brand-badge">DOCS</span>
                 <div class="brand-titles">
-                    <h1>📚 个人文档中心 <span style="font-size:12px; color:var(--primary); font-weight:normal;">[Markdown 知识库]</span></h1>
-                    <p>直连 GitHub 仓库指定路径下的 Markdown 文档，支持多选项卡实时预览与深度阅读</p>
+                    <h1>📚 个人文档中心 <span style="font-size:12px; color:var(--primary); font-weight:normal;">[多格式文档 & 知识库]</span></h1>
+                    <p>直连 GitHub 仓库指定路径下的 MD / TXT / Word / PDF / Excel 文档，支持多选项卡实时预览与一键下载</p>
                 </div>
             </div>
 
@@ -764,14 +985,16 @@
         <!-- ===== 搜索与分类控制台 ===== -->
         <section class="control-bar">
             <div class="category-tabs" id="categoryTabs">
-                <button class="cat-btn active" data-cat="all">全部文档</button>
+                <button class="cat-btn active" data-cat="all">全部格式</button>
+                <button class="cat-btn" data-cat="Word">Word (.docx)</button>
+                <button class="cat-btn" data-cat="PDF">PDF 文档</button>
+                <button class="cat-btn" data-cat="表格">表格 (.xlsx)</button>
+                <button class="cat-btn" data-cat="文本">文本 (.txt)</button>
                 <button class="cat-btn" data-cat="指南">指南</button>
                 <button class="cat-btn" data-cat="架构">架构</button>
                 <button class="cat-btn" data-cat="开发">开发</button>
                 <button class="cat-btn" data-cat="游戏">游戏</button>
                 <button class="cat-btn" data-cat="运维">运维</button>
-                <button class="cat-btn" data-cat="参考">参考</button>
-                <button class="cat-btn" data-cat="规划">规划</button>
                 <button class="cat-btn" data-cat="征文">征文</button>
             </div>
 
@@ -786,7 +1009,7 @@
             <div class="section-header">
                 <div class="section-title">
                     <span>📑 文档多选项卡列表</span>
-                    <span class="section-hint">(点击选项卡切换查看，每张卡片展示 MD 文档前 3 行摘要预览)</span>
+                    <span class="section-hint">(支持 MD / TXT / Word / PDF / Excel，点击即可在下方实时深度渲染预览)</span>
                 </div>
             </div>
 
@@ -807,19 +1030,19 @@
                         <span>•</span>
                         <span class="doc-stats-tag" id="currentDocStats">0 字符 / 0 行</span>
                         <span>•</span>
-                        <span id="currentDocUpdated">2026-09-19</span>
+                        <span id="currentDocUpdated">2026-10-01</span>
                     </div>
                 </div>
 
                 <div class="reader-actions">
-                    <button class="reader-btn primary-dl" id="btnDownloadDoc" title="一键从 GitHub 仓库下载该 Markdown 文档">
+                    <button class="reader-btn primary-dl" id="btnDownloadDoc" title="一键从 GitHub 仓库下载该文档">
                         <span>📥</span> <span>一键下载文档</span>
                     </button>
                     <button class="reader-btn" id="btnToggleRaw">
                         <span>👁️</span> <span>查看源码</span>
                     </button>
                     <button class="reader-btn" id="btnCopyMarkdown">
-                        <span>📋</span> <span>复制 MD 全文</span>
+                        <span>📋</span> <span>复制全文</span>
                     </button>
                     <button class="reader-btn" id="btnCopyDocLink" title="复制当前文档的直达分享链接">
                         <span>🔗</span> <span>复制直达链接</span>
@@ -830,10 +1053,22 @@
                 </div>
             </div>
 
-            <!-- Markdown 渲染输出容器 -->
+            <!-- Excel 工作表标签栏 -->
+            <div class="excel-sheets-bar" id="excelSheetsBar" style="display:none;"></div>
+
+            <!-- PDF 原生视口容器 -->
+            <div class="pdf-viewer-wrap" id="pdfRenderArea" style="display:none;">
+                <div class="pdf-top-actions">
+                    <span id="pdfMetaTip" style="color:var(--text-muted); font-size:12px;">📄 正在使用浏览器原生 PDF 视口渲染</span>
+                    <a href="#" target="_blank" class="pdf-fullscreen-btn" id="btnPdfFullscreen">↗ 全屏/新窗口查看 PDF</a>
+                </div>
+                <iframe id="pdfIframe" src="" class="pdf-iframe-viewer" title="PDF 预览"></iframe>
+            </div>
+
+            <!-- 主渲染输出容器 (支持 Markdown、TXT、Word、Excel 表格) -->
             <article class="markdown-body" id="markdownRenderArea"></article>
 
-            <!-- 原始 Markdown 源代码查看框 -->
+            <!-- 原始源代码/文本查看框 -->
             <textarea class="raw-source-view" id="rawSourceArea" readonly spellcheck="false"></textarea>
         </section>
     </div>
@@ -1003,7 +1238,22 @@
         }
 
         // ==========================================
-        // 4. 数据加载与 GitHub 仓库同步
+        // 4. 支持格式扩展与类型感知 (Multi-Format Support)
+        // ==========================================
+        const SUPPORTED_EXTS = ['.md', '.markdown', '.txt', '.docx', '.doc', '.pdf', '.xlsx', '.xls', '.csv'];
+
+        function getDocType(filename) {
+            const ext = (filename.match(/\.[a-z0-9]+$/i) || [''])[0].toLowerCase();
+            if (ext === '.md' || ext === '.markdown') return 'markdown';
+            if (ext === '.txt') return 'text';
+            if (ext === '.docx' || ext === '.doc') return 'word';
+            if (ext === '.pdf') return 'pdf';
+            if (ext === '.xlsx' || ext === '.xls' || ext === '.csv') return 'excel';
+            return 'unknown';
+        }
+
+        // ==========================================
+        // 5. 数据加载与 GitHub 仓库同步
         // ==========================================
         async function loadDocuments() {
             updateStatus('正在读取文档列表...');
@@ -1022,33 +1272,64 @@
             // 若本地为空，初始化内置骨干清单
             if (documentsList.length === 0) {
                 documentsList = [
-                    { id: 'welcome', filename: '01-welcome-to-docs.md', title: '个人文档中心与知识库说明', category: '指南', badge: 'START', path: 'content/01-welcome-to-docs.md' },
-                    { id: 'zero-build', filename: '02-zero-build-architecture.md', title: 'Zero-Build 零构建纯静态架构规范', category: '架构', badge: 'ARCH', path: 'content/02-zero-build-architecture.md' },
-                    { id: 'touch-controller', filename: '03-touch-controller-api.md', title: 'TouchController 触屏控制器 API 接入', category: '开发', badge: 'API', path: 'content/03-touch-controller-api.md' },
-                    { id: 'color-picker', filename: '04-color-picker-guide.md', title: 'ColorPicker 独立调色盘与拾色器指南', category: '开发', badge: 'LIB', path: 'content/04-color-picker-guide.md' },
-                    { id: 'game-balance', filename: '05-game-balance-and-physics.md', title: '小游戏物理引擎与平衡性调优', category: '游戏', badge: 'GAME', path: 'content/05-game-balance-and-physics.md' },
-                    { id: 'cloudflare', filename: '06-cloudflare-deployment.md', title: 'Cloudflare Pages 自动化部署与域名', category: '运维', badge: 'OPS', path: 'content/06-cloudflare-deployment.md' },
-                    { id: 'markdown-syntax', filename: '07-markdown-syntax-reference.md', title: 'Markdown 排版规范与常用语法速查', category: '参考', badge: 'DOC', path: 'content/07-markdown-syntax-reference.md' },
-                    { id: 'roadmap', filename: '08-project-roadmap.md', title: '个人数字化工作台未来路线图规划', category: '规划', badge: 'PLAN', path: 'content/08-project-roadmap.md' }
+                    { id: 'welcome', filename: '01-welcome-to-docs.md', title: '个人文档中心与 Markdown 知识库', category: '指南', badge: 'START', path: 'content/01-welcome-to-docs.md', type: 'markdown' },
+                    { id: 'zero-build', filename: '02-zero-build-architecture.md', title: 'Zero-Build 零构建纯静态架构规范', category: '架构', badge: 'ARCH', path: 'content/02-zero-build-architecture.md', type: 'markdown' },
+                    { id: 'touch-controller', filename: '03-touch-controller-api.md', title: 'TouchController 通用移动端虚拟触控控制器 API', category: '开发', badge: 'API', path: 'content/03-touch-controller-api.md', type: 'markdown' },
+                    { id: 'color-picker', filename: '04-color-picker-guide.md', title: 'ColorPicker 独立调色盘与光谱拾色器指南', category: '开发', badge: 'START', path: 'content/04-color-picker-guide.md', type: 'markdown' },
+                    { id: 'game-balance', filename: '05-game-balance-and-physics.md', title: '经典小游戏物理引擎与平衡性调优备忘录', category: '游戏', badge: 'GAME', path: 'content/05-game-balance-and-physics.md', type: 'markdown' },
+                    { id: 'cloudflare', filename: '06-cloudflare-deployment.md', title: 'Cloudflare Pages 静态自动化部署与自定义域名绑定', category: '运维', badge: 'OPS', path: 'content/06-cloudflare-deployment.md', type: 'markdown' },
+                    { id: 'markdown-syntax', filename: '07-markdown-syntax-reference.md', title: 'Markdown 常用排版语法与 GitHub 特性速查', category: '参考', badge: 'DOC', path: 'content/07-markdown-syntax-reference.md', type: 'markdown' },
+                    { id: 'roadmap', filename: '08-project-roadmap.md', title: '个人工作台与小游戏合集未来演进路线图', category: '规划', badge: 'PLAN', path: 'content/08-project-roadmap.md', type: 'markdown' }
                 ];
             }
 
-            // 异步并发拉取所有文档内容并提取前 3 行
+            // 处理各格式文档的元数据与前 3 行预览
             await Promise.all(documentsList.map(async (doc) => {
-                if (!doc.content) {
-                    try {
-                        const targetUrl = encodeURI(doc.path || `content/${doc.filename}`);
-                        const r = await fetch(targetUrl);
-                        if (r.ok) {
-                            doc.content = await r.text();
-                        } else {
-                            doc.content = `# ${doc.title}\n> 无法从本地路径获取文档内容\n可点击右上角 [同步 GitHub 仓库] 尝试拉取。`;
+                const docType = doc.type || getDocType(doc.filename);
+                doc.type = docType;
+
+                if (docType === 'markdown' || docType === 'text') {
+                    if (!doc.content) {
+                        try {
+                            const targetUrl = encodeURI(doc.path || `content/${doc.filename}`);
+                            const r = await fetch(targetUrl);
+                            if (r.ok) {
+                                doc.content = await r.text();
+                            } else {
+                                doc.content = `# ${doc.title}\n> 无法从本地路径获取文档内容\n可点击右上角 [同步 GitHub 仓库] 尝试拉取。`;
+                            }
+                        } catch (err) {
+                            doc.content = `# ${doc.title}\n> 网络不可达或未部署对应文件\n可通过 GitHub 仓库链接直接查阅。`;
                         }
-                    } catch (err) {
-                        doc.content = `# ${doc.title}\n> 网络不可达或未部署对应文件\n可通过 GitHub 仓库链接直接查阅。`;
+                    }
+                    if (!doc.previewLines || doc.previewLines.length === 0) {
+                        doc.previewLines = extractFirst3Lines(doc.content);
+                    }
+                } else if (docType === 'word') {
+                    if (!doc.previewLines || doc.previewLines.length === 0) {
+                        doc.previewLines = [
+                            `// [Microsoft Word .docx 文档]`,
+                            `// 文件名: ${doc.filename}`,
+                            `// 点击即可在线通过 Mammoth.js 解析排版与表格`
+                        ];
+                    }
+                } else if (docType === 'excel') {
+                    if (!doc.previewLines || doc.previewLines.length === 0) {
+                        doc.previewLines = [
+                            `// [Microsoft Excel 电子表格]`,
+                            `// 文件名: ${doc.filename}`,
+                            `// 点击即可在线通过 SheetJS 切换工作表并查看数据表`
+                        ];
+                    }
+                } else if (docType === 'pdf') {
+                    if (!doc.previewLines || doc.previewLines.length === 0) {
+                        doc.previewLines = [
+                            `// [Adobe PDF 便携式文档]`,
+                            `// 文件名: ${doc.filename}`,
+                            `// 点击即可在下方通过浏览器原生视口直接阅读与放大`
+                        ];
                     }
                 }
-                doc.previewLines = extractFirst3Lines(doc.content);
             }));
 
             renderTabs();
@@ -1076,11 +1357,11 @@
                 syncUrlToAddressBar(initialDoc, true);
             }
 
-            updateStatus(`已就绪，共载入 ${documentsList.length} 篇文档`);
+            updateStatus(`已就绪，共载入 ${documentsList.length} 篇文档 (支持 MD / TXT / Word / PDF / Excel)`);
             document.getElementById('labelTotalDocs').textContent = `${documentsList.length} 篇`;
         }
 
-        // 手动从 GitHub 仓库指定路径同步
+        // 手动从 GitHub 仓库指定路径同步 (支持所有扩展名)
         async function syncFromGitHub() {
             const { owner, repo, branch, path } = currentConfig;
             const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
@@ -1093,38 +1374,90 @@
                 }
                 const files = await res.json();
                 
-                // 筛选出所有 .md 文件
-                const mdFiles = files.filter(f => f.type === 'file' && f.name.toLowerCase().endsWith('.md'));
-                if (mdFiles.length === 0) {
-                    updateStatus('未在 GitHub 路径下检索到 .md 文件');
+                // 筛选出所有支持的文件格式
+                const matchedFiles = files.filter(f => {
+                    if (f.type !== 'file') return false;
+                    const name = f.name.toLowerCase();
+                    return SUPPORTED_EXTS.some(ext => name.endsWith(ext));
+                });
+
+                if (matchedFiles.length === 0) {
+                    updateStatus('未在 GitHub 路径下检索到匹配的文档文件');
                     return;
                 }
 
-                updateStatus(`检索到 ${mdFiles.length} 个 Markdown 文件，正在读取内容...`);
+                updateStatus(`检索到 ${matchedFiles.length} 个文档文件，正在读取元数据与内容...`);
 
                 const newDocs = [];
-                for (let f of mdFiles) {
+                for (let f of matchedFiles) {
+                    const docType = getDocType(f.name);
                     let content = '';
-                    try {
-                        // 使用 GitHub Raw 链接直接下载原始内容
-                        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${f.path}`;
-                        const rawRes = await fetch(rawUrl);
-                        if (rawRes.ok) {
-                            content = await rawRes.text();
-                        }
-                    } catch (e) {}
+                    let preview = [];
+                    let title = f.name;
+                    let category = 'GitHub';
+                    let badge = 'DOC';
 
-                    const preview = extractFirst3Lines(content);
-                    const titleMatch = content.match(/^#\s+(.+)$/m);
-                    const title = titleMatch ? titleMatch[1].trim() : f.name.replace(/\.md$/i, '');
+                    if (docType === 'word') {
+                        badge = 'WORD';
+                        category = 'Word';
+                        title = f.name.replace(/\.docx?$/i, '') + ' (Word 格式)';
+                        preview = [
+                            `// [Microsoft Word .docx 文档]`,
+                            `// 文件名: ${f.name}`,
+                            `// 点击即可在线通过 Mammoth.js 解析排版与表格`
+                        ];
+                    } else if (docType === 'excel') {
+                        badge = 'EXCEL';
+                        category = '表格';
+                        title = f.name.replace(/\.(xlsx|xls|csv)$/i, '') + ' (Excel 格式)';
+                        preview = [
+                            `// [Microsoft Excel 电子表格]`,
+                            `// 文件名: ${f.name}`,
+                            `// 点击即可在线通过 SheetJS 查看单元格与工作表`
+                        ];
+                    } else if (docType === 'pdf') {
+                        badge = 'PDF';
+                        category = 'PDF';
+                        title = f.name.replace(/\.pdf$/i, '') + ' (PDF 格式)';
+                        preview = [
+                            `// [Adobe PDF 便携式文档]`,
+                            `// 文件名: ${f.name}`,
+                            `// 点击即可在线通过浏览器原生视口阅读`
+                        ];
+                    } else {
+                        // text or markdown
+                        if (docType === 'text') {
+                            badge = 'TXT';
+                            category = '文本';
+                            title = f.name.replace(/\.txt$/i, '');
+                        } else {
+                            badge = 'RAW';
+                            category = 'GitHub';
+                        }
+
+                        try {
+                            const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${f.path}`;
+                            const rawRes = await fetch(rawUrl);
+                            if (rawRes.ok) {
+                                content = await rawRes.text();
+                            }
+                        } catch (e) {}
+
+                        preview = extractFirst3Lines(content);
+                        if (docType === 'markdown') {
+                            const titleMatch = content.match(/^#\s+(.+)$/m);
+                            if (titleMatch) title = titleMatch[1].trim();
+                        }
+                    }
 
                     newDocs.push({
                         id: f.name.replace(/[^a-zA-Z0-9_\-]/g, '_'),
                         filename: f.name,
                         title: title,
-                        category: 'GitHub',
-                        badge: 'RAW',
+                        category: category,
+                        badge: badge,
                         path: f.path,
+                        type: docType,
                         content: content,
                         previewLines: preview,
                         htmlUrl: f.html_url
@@ -1147,7 +1480,7 @@
                 if (!currentDoc && documentsList.length > 0) currentDoc = documentsList[0];
                 if (currentDoc) selectDocument(currentDoc.id, false);
 
-                updateStatus(`🎉 从 GitHub 成功同步 ${documentsList.length} 篇文档`);
+                updateStatus(`🎉 从 GitHub 成功同步 ${documentsList.length} 篇多格式文档`);
                 document.getElementById('labelTotalDocs').textContent = `${documentsList.length} 篇`;
             } catch (err) {
                 console.error(err);
@@ -1156,7 +1489,7 @@
         }
 
         // ==========================================
-        // 5. 渲染选项卡与前 3 行预览
+        // 6. 渲染选项卡与前 3 行预览
         // ==========================================
         function renderTabs() {
             const gallery = document.getElementById('docTabsGallery');
@@ -1175,7 +1508,7 @@
             if (filtered.length === 0) {
                 gallery.innerHTML = `
                     <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-dim); background: var(--bg-card); border: 1px dashed var(--border-color); clip-path: var(--clip-md);">
-                        未找到匹配的 Markdown 文档选项卡
+                        未找到匹配的文档选项卡
                     </div>
                 `;
                 return;
@@ -1193,13 +1526,13 @@
 
                 card.innerHTML = `
                     <div class="tab-card-top">
-                        <span class="tab-badge">${doc.badge || 'DOC'}</span>
+                        <span class="tab-badge ${doc.badge || 'DOC'}">${doc.badge || 'DOC'}</span>
                         <span class="tab-ext">${doc.category || 'MD'}</span>
                     </div>
 
-                    <div class="tab-title" title="${doc.title}">${doc.title}</div>
+                    <div class="tab-title" title="${escapeHtml(doc.title)}">${escapeHtml(doc.title)}</div>
 
-                    <!-- 核心展示规则 3: 显示 MD 文档前 3 行预览 -->
+                    <!-- 核心展示规则 3: 显示前 3 行预览 -->
                     <div class="tab-preview-box">
                         <div class="preview-line">
                             <span class="line-num">01</span>
@@ -1216,12 +1549,12 @@
                     </div>
 
                     <div class="tab-card-footer">
-                        <span>📄 ${doc.filename}</span>
+                        <span>📄 ${escapeHtml(doc.filename)}</span>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <button class="tab-card-dl-btn" data-doc-id="${doc.id}" title="一键从仓库下载该文档">
                                 <span>📥</span> <span>下载</span>
                             </button>
-                            <span class="tab-action-hint">阅读全文 →</span>
+                            <span class="tab-action-hint">阅读预览 →</span>
                         </div>
                     </div>
                 `;
@@ -1247,12 +1580,15 @@
         }
 
         // ==========================================
-        // 6. 文档选中与阅读器更新
+        // 7. 多格式文档深度预览调度器 (Universal Preview Dispatcher)
         // ==========================================
-        function selectDocument(docId, shouldUpdateUrl = true) {
+        async function selectDocument(docId, shouldUpdateUrl = true) {
             activeDocId = docId;
             const doc = documentsList.find(d => d.id === docId);
             if (!doc) return;
+
+            const docType = doc.type || getDocType(doc.filename);
+            doc.type = docType;
 
             // 动态同步浏览器标签页标题
             document.title = `${doc.title} // 个人文档中心`;
@@ -1268,34 +1604,258 @@
             });
 
             // 更新阅读器信息
-            document.getElementById('currentDocTitle').innerHTML = `<span>${doc.title}</span>`;
+            document.getElementById('currentDocTitle').innerHTML = `<span>${escapeHtml(doc.title)}</span>`;
             document.getElementById('currentDocFilename').textContent = doc.filename;
             if (doc.date && document.getElementById('currentDocUpdated')) {
                 document.getElementById('currentDocUpdated').textContent = doc.date;
             }
-
-            const charCount = doc.content ? doc.content.length : 0;
-            const lineCount = doc.content ? doc.content.split('\n').length : 0;
-            document.getElementById('currentDocStats').textContent = `${charCount} 字符 • ${lineCount} 行`;
 
             // GitHub 原文直达链接
             const ghBtn = document.getElementById('btnViewOnGithub');
             const { owner, repo, branch, path } = currentConfig;
             ghBtn.href = doc.htmlUrl || `https://github.com/${owner}/${repo}/blob/${branch}/${doc.path || path + '/' + doc.filename}`;
 
-            // 渲染正文与源码框
-            document.getElementById('markdownRenderArea').innerHTML = parseMarkdown(doc.content || '');
-            document.getElementById('rawSourceArea').value = doc.content || '';
+            // 重置视图显隐
+            const excelSheetsBar = document.getElementById('excelSheetsBar');
+            const pdfRenderArea = document.getElementById('pdfRenderArea');
+            const markdownRenderArea = document.getElementById('markdownRenderArea');
+            const rawSourceArea = document.getElementById('rawSourceArea');
+            const btnToggleRaw = document.getElementById('btnToggleRaw');
 
-            // 滚动到阅读区顶部
+            excelSheetsBar.style.display = 'none';
+            excelSheetsBar.innerHTML = '';
+            pdfRenderArea.style.display = 'none';
+            document.getElementById('pdfIframe').src = '';
+            markdownRenderArea.style.display = 'block';
+            rawSourceArea.style.display = 'none';
+            isRawView = false;
+            btnToggleRaw.classList.remove('active');
+            btnToggleRaw.innerHTML = '<span>👁️</span> <span>查看源码</span>';
+
+            // 源码切换按钮在 Word/PDF/Excel 时隐藏
+            if (docType === 'word' || docType === 'excel' || docType === 'pdf') {
+                btnToggleRaw.style.display = 'none';
+            } else {
+                btnToggleRaw.style.display = 'inline-flex';
+            }
+
+            const targetUrl = encodeURI(doc.path || `content/${doc.filename}`);
+
+            // 分发格式渲染
+            try {
+                if (docType === 'markdown') {
+                    if (!doc.content) {
+                        markdownRenderArea.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">⏳ 正在加载 Markdown 文档...</div>';
+                        const res = await fetch(targetUrl);
+                        if (res.ok) doc.content = await res.text();
+                        else doc.content = `# ${doc.title}\n> 无法加载文档内容 (HTTP ${res.status})`;
+                    }
+                    markdownRenderArea.innerHTML = parseMarkdown(doc.content || '');
+                    rawSourceArea.value = doc.content || '';
+                    const charCount = doc.content ? doc.content.length : 0;
+                    const lineCount = doc.content ? doc.content.split('\n').length : 0;
+                    document.getElementById('currentDocStats').textContent = `${charCount} 字符 • ${lineCount} 行`;
+                } 
+                else if (docType === 'text') {
+                    if (!doc.content) {
+                        markdownRenderArea.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">⏳ 正在加载纯文本文件...</div>';
+                        const res = await fetch(targetUrl);
+                        if (res.ok) doc.content = await res.text();
+                        else doc.content = `无法加载纯文本文件 (HTTP ${res.status})`;
+                    }
+                    const text = doc.content || '';
+                    const lines = text.split('\n');
+                    const lineNums = lines.map((_, i) => String(i + 1).padStart(3, '0')).join('\n');
+                    markdownRenderArea.innerHTML = `
+                        <div class="txt-content-wrap">
+                            <div class="txt-line-numbers"><pre>${lineNums}</pre></div>
+                            <pre class="txt-body-code">${escapeHtml(text)}</pre>
+                        </div>
+                    `;
+                    rawSourceArea.value = text;
+                    document.getElementById('currentDocStats').textContent = `TXT 纯文本 • ${text.length} 字符 • ${lines.length} 行`;
+                } 
+                else if (docType === 'word') {
+                    markdownRenderArea.innerHTML = `
+                        <div class="word-doc-wrapper">
+                            <div class="word-doc-header">
+                                <span class="badge">WORD</span>
+                                <span>📄 正在通过 Mammoth.js 解析 Word 排版结构与表格...</span>
+                            </div>
+                            <div style="padding:40px; text-align:center; color:var(--text-muted);">
+                                <span style="font-size:24px;">⏳</span><br>正在读取并转换 Word 文档...
+                            </div>
+                        </div>
+                    `;
+
+                    let arrayBuffer = doc._arrayBuffer;
+                    if (!arrayBuffer) {
+                        const res = await fetch(targetUrl);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        arrayBuffer = await res.arrayBuffer();
+                        doc._arrayBuffer = arrayBuffer;
+                    }
+
+                    if (window.mammoth) {
+                        const result = await mammoth.convertToHtml({ arrayBuffer });
+                        const html = result.value || '<p style="color:#64748b;">(Word 文档内容为空)</p>';
+                        markdownRenderArea.innerHTML = `
+                            <div class="word-doc-wrapper">
+                                <div class="word-doc-header">
+                                    <span class="badge">WORD</span>
+                                    <span>Microsoft Word 格式排版渲染 • ${(arrayBuffer.byteLength / 1024).toFixed(1)} KB</span>
+                                </div>
+                                <div class="word-doc-content">
+                                    ${html}
+                                </div>
+                            </div>
+                        `;
+                        rawSourceArea.value = html;
+                        document.getElementById('currentDocStats').textContent = `Word 文档 • ${(arrayBuffer.byteLength / 1024).toFixed(1)} KB`;
+                    } else {
+                        markdownRenderArea.innerHTML = `<div style="padding:30px; color:#f43f5e;">⚠️ Mammoth.js 未加载，无法在线解析 Word 文档。请点击上方 [📥 一键下载文档] 下载查看。</div>`;
+                    }
+                } 
+                else if (docType === 'excel') {
+                    markdownRenderArea.innerHTML = `
+                        <div style="padding:40px; text-align:center; color:var(--text-muted);">
+                            <span style="font-size:24px;">⏳</span><br>正在通过 SheetJS 解析 Excel 电子表格...
+                        </div>
+                    `;
+
+                    let arrayBuffer = doc._arrayBuffer;
+                    if (!arrayBuffer) {
+                        const res = await fetch(targetUrl);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        arrayBuffer = await res.arrayBuffer();
+                        doc._arrayBuffer = arrayBuffer;
+                    }
+
+                    if (window.XLSX) {
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        doc._workbook = workbook;
+
+                        excelSheetsBar.innerHTML = '';
+                        excelSheetsBar.style.display = 'flex';
+
+                        workbook.SheetNames.forEach((sheetName, index) => {
+                            const btn = document.createElement('button');
+                            btn.className = `excel-sheet-pill ${index === 0 ? 'active' : ''}`;
+                            btn.innerHTML = `<span>📊</span> <span>${escapeHtml(sheetName)}</span>`;
+                            btn.addEventListener('click', () => {
+                                excelSheetsBar.querySelectorAll('.excel-sheet-pill').forEach(b => b.classList.remove('active'));
+                                btn.classList.add('active');
+                                renderExcelSheetTable(workbook, sheetName);
+                            });
+                            excelSheetsBar.appendChild(btn);
+                        });
+
+                        renderExcelSheetTable(workbook, workbook.SheetNames[0]);
+                        document.getElementById('currentDocStats').textContent = `Excel 电子表格 • ${workbook.SheetNames.length} 个工作表 • ${(arrayBuffer.byteLength / 1024).toFixed(1)} KB`;
+                    } else {
+                        markdownRenderArea.innerHTML = `<div style="padding:30px; color:#f43f5e;">⚠️ SheetJS 未加载，无法解析 Excel 表格。请点击上方 [📥 一键下载文档] 下载查看。</div>`;
+                    }
+                } 
+                else if (docType === 'pdf') {
+                    markdownRenderArea.style.display = 'none';
+                    pdfRenderArea.style.display = 'block';
+
+                    let blobUrl = doc._blobUrl;
+                    if (!blobUrl) {
+                        const res = await fetch(targetUrl);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const blob = await res.blob();
+                        blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+                        doc._blobUrl = blobUrl;
+                    }
+
+                    document.getElementById('pdfIframe').src = blobUrl;
+                    document.getElementById('btnPdfFullscreen').href = blobUrl;
+                    document.getElementById('currentDocStats').textContent = `PDF 电子文档 • 原生视口渲染`;
+                }
+            } catch (err) {
+                console.error('渲染文档失败:', err);
+                markdownRenderArea.style.display = 'block';
+                pdfRenderArea.style.display = 'none';
+                excelSheetsBar.style.display = 'none';
+                markdownRenderArea.innerHTML = `
+                    <div style="padding:30px; background:#140c10; border:1px solid #7f1d1d; border-radius:8px; color:#fca5a5;">
+                        <h3 style="margin-top:0; color:#f87171;">⚠️ 文档加载或渲染失败</h3>
+                        <p style="font-size:14px; margin-bottom:12px;">错误信息: ${escapeHtml(err.message)}</p>
+                        <p style="font-size:13px; color:#cbd5e1;">您仍可点击上方 <strong>[📥 一键下载文档]</strong> 直接从仓库下载原文件。</p>
+                    </div>
+                `;
+            }
+
+            // 移动端平滑滚动
             const readerPanel = document.getElementById('readerPanel');
             if (window.innerWidth < 900) {
                 readerPanel.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
+        // Excel 表格渲染辅助函数
+        function renderExcelSheetTable(workbook, sheetName) {
+            const worksheet = workbook.Sheets[sheetName];
+            if (!worksheet) return;
+
+            const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+            if (!rawData || rawData.length === 0) {
+                document.getElementById('markdownRenderArea').innerHTML = `
+                    <div class="excel-table-scroll-wrap" style="padding:30px; text-align:center; color:var(--text-dim);">
+                        此工作表 (${escapeHtml(sheetName)}) 为空
+                    </div>
+                `;
+                return;
+            }
+
+            let maxCols = 0;
+            rawData.forEach(row => {
+                if (row.length > maxCols) maxCols = row.length;
+            });
+
+            let colHeaders = '<th>#</th>';
+            for (let c = 0; c < maxCols; c++) {
+                colHeaders += `<th>${getExcelColName(c)}</th>`;
+            }
+
+            let rowsHtml = '';
+            rawData.forEach((row, rowIdx) => {
+                let cellsHtml = `<td class="row-index-cell">${rowIdx + 1}</td>`;
+                for (let c = 0; c < maxCols; c++) {
+                    const val = row[c] !== undefined && row[c] !== null ? String(row[c]) : '';
+                    cellsHtml += `<td>${escapeHtml(val)}</td>`;
+                }
+                rowsHtml += `<tr>${cellsHtml}</tr>`;
+            });
+
+            document.getElementById('markdownRenderArea').innerHTML = `
+                <div class="excel-table-scroll-wrap">
+                    <table class="excel-cyber-table">
+                        <thead>
+                            <tr>${colHeaders}</tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getExcelColName(colIndex) {
+            let colName = '';
+            let dividend = colIndex + 1;
+            while (dividend > 0) {
+                let modulo = (dividend - 1) % 26;
+                colName = String.fromCharCode(65 + modulo) + colName;
+                dividend = Math.floor((dividend - modulo) / 26);
+            }
+            return colName;
+        }
+
         // ==========================================
-        // 7. 地址栏 URL 路由与状态同步
+        // 8. 地址栏 URL 路由与状态同步
         // ==========================================
         // 获取地址栏指定的文档标识（支持 ?doc=文件名 或 #doc=文件名 / #文件名）
         function getDocIdentifierFromUrl() {
@@ -1347,7 +1907,7 @@
         }
 
         // ==========================================
-        // 7. 辅助工具与交互事件
+        // 9. 辅助工具与交互事件
         // ==========================================
         function escapeHtml(str) {
             return String(str || '')
@@ -1370,7 +1930,7 @@
         });
 
         // ==========================================
-        // 8. 仓库文档一键下载核心逻辑
+        // 10. 仓库文档一键下载核心逻辑 (支持二进制与文本多格式)
         // ==========================================
         async function downloadDocument(doc, triggerBtn = null) {
             if (!doc) return;
@@ -1382,18 +1942,33 @@
             }
 
             const { owner, repo, branch, path } = currentConfig;
-            // 仓库原生下载源 (GitHub Raw 规范直链与本地仓库路径)
             const repoPath = doc.path || `${path}/${doc.filename}`;
             const repoRawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${repoPath}`;
             const localUrl = encodeURI(doc.path || `content/${doc.filename}`);
 
-            let contentToDownload = '';
+            let blobToDownload = null;
+
+            // MIME 类型映射
+            const ext = (doc.filename.match(/\.[a-z0-9]+$/i) || [''])[0].toLowerCase();
+            const mimeMap = {
+                '.md': 'text/markdown;charset=utf-8',
+                '.markdown': 'text/markdown;charset=utf-8',
+                '.txt': 'text/plain;charset=utf-8',
+                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                '.doc': 'application/msword',
+                '.pdf': 'application/pdf',
+                '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                '.xls': 'application/vnd.ms-excel',
+                '.csv': 'text/csv;charset=utf-8'
+            };
+            const targetMime = mimeMap[ext] || 'application/octet-stream';
 
             try {
-                // 1. 优先尝试从 GitHub 仓库源直拉最新版本
+                // 1. 优先尝试从 GitHub 仓库源直拉
                 const response = await fetch(repoRawUrl);
                 if (response.ok) {
-                    contentToDownload = await response.text();
+                    const rawBlob = await response.blob();
+                    blobToDownload = new Blob([rawBlob], { type: targetMime });
                 } else {
                     throw new Error('Raw HTTP ' + response.status);
                 }
@@ -1403,18 +1978,23 @@
                     // 2. 本地相对路径回退（本地部署或离线环境）
                     const localRes = await fetch(localUrl);
                     if (localRes.ok) {
-                        contentToDownload = await localRes.text();
+                        const localBlob = await localRes.blob();
+                        blobToDownload = new Blob([localBlob], { type: targetMime });
                     } else {
                         throw new Error('Local HTTP ' + localRes.status);
                     }
                 } catch (e2) {
-                    // 3. 使用内存缓存中已加载的内容
-                    contentToDownload = doc.content || '';
+                    // 3. 使用内存缓存 (ArrayBuffer 或 content)
+                    if (doc._arrayBuffer) {
+                        blobToDownload = new Blob([doc._arrayBuffer], { type: targetMime });
+                    } else if (doc.content) {
+                        blobToDownload = new Blob([doc.content], { type: targetMime });
+                    }
                 }
             }
 
-            if (!contentToDownload) {
-                alert('无法从仓库获取文档内容，请检查网络或仓库配置');
+            if (!blobToDownload) {
+                alert('无法从仓库获取文档文件，请检查网络或仓库配置');
                 if (triggerBtn && originalBtnHtml) {
                     triggerBtn.disabled = false;
                     triggerBtn.innerHTML = originalBtnHtml;
@@ -1422,16 +2002,15 @@
                 return;
             }
 
-            // 触发浏览器标准下载
-            const blob = new Blob([contentToDownload], { type: 'text/markdown;charset=utf-8' });
-            const blobUrl = URL.createObjectURL(blob);
+            // 触发浏览器原生标准下载
+            const blobUrl = URL.createObjectURL(blobToDownload);
             const downloadLink = document.createElement('a');
             downloadLink.href = blobUrl;
-            downloadLink.download = doc.filename.endsWith('.md') ? doc.filename : `${doc.filename}.md`;
+            downloadLink.download = doc.filename;
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
 
             if (triggerBtn) {
                 triggerBtn.innerHTML = '<span>✔</span> <span>已开始下载</span>';
@@ -1449,13 +2028,29 @@
             downloadDocument(doc, this);
         });
 
-        // 复制 Markdown 全文
+        // 复制全文功能 (适配 Markdown、TXT 及提取纯文本)
         document.getElementById('btnCopyMarkdown').addEventListener('click', async function() {
             const doc = documentsList.find(d => d.id === activeDocId);
-            if (!doc || !doc.content) return;
+            if (!doc) return;
+
+            let textToCopy = doc.content || '';
+            if (!textToCopy) {
+                if (doc._workbook && window.XLSX) {
+                    const firstSheet = doc._workbook.Sheets[doc._workbook.SheetNames[0]];
+                    textToCopy = XLSX.utils.sheet_to_csv(firstSheet);
+                } else if (doc.type === 'word') {
+                    const rendered = document.querySelector('.word-doc-content');
+                    if (rendered) textToCopy = rendered.innerText;
+                }
+            }
+
+            if (!textToCopy) {
+                alert('当前文档暂无可复制的文本内容');
+                return;
+            }
 
             try {
-                await navigator.clipboard.writeText(doc.content);
+                await navigator.clipboard.writeText(textToCopy);
                 const originalText = this.innerHTML;
                 this.innerHTML = '<span>✔</span> <span>已复制到剪贴板</span>';
                 setTimeout(() => { this.innerHTML = originalText; }, 2000);

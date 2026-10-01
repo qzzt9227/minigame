@@ -6,7 +6,8 @@
     "category": "指南",
     "badge": "START",
     "date": "2026-09-19",
-    "path": "content/01-welcome-to-docs.md"
+    "path": "content/01-welcome-to-docs.md",
+    "type": "markdown"
   },
   {
     "id": "zero-build",
@@ -15,7 +16,8 @@
     "category": "架构",
     "badge": "ARCH",
     "date": "2026-09-19",
-    "path": "content/02-zero-build-architecture.md"
+    "path": "content/02-zero-build-architecture.md",
+    "type": "markdown"
   },
   {
     "id": "touch-controller",
@@ -24,25 +26,28 @@
     "category": "开发",
     "badge": "API",
     "date": "2026-09-19",
-    "path": "content/03-touch-controller-api.md"
+    "path": "content/03-touch-controller-api.md",
+    "type": "markdown"
   },
   {
     "id": "color-picker",
     "filename": "04-color-picker-guide.md",
     "title": "ColorPicker 独立调色盘与光谱拾色器指南",
     "category": "开发",
-    "badge": "LIB",
+    "badge": "START",
     "date": "2026-09-19",
-    "path": "content/04-color-picker-guide.md"
+    "path": "content/04-color-picker-guide.md",
+    "type": "markdown"
   },
   {
     "id": "game-balance",
     "filename": "05-game-balance-and-physics.md",
     "title": "经典小游戏物理引擎与平衡性调优备忘录",
     "category": "游戏",
-    "badge": "PHYSICS",
+    "badge": "GAME",
     "date": "2026-09-19",
-    "path": "content/05-game-balance-and-physics.md"
+    "path": "content/05-game-balance-and-physics.md",
+    "type": "markdown"
   },
   {
     "id": "cloudflare",
@@ -51,7 +56,8 @@
     "category": "运维",
     "badge": "OPS",
     "date": "2026-09-19",
-    "path": "content/06-cloudflare-deployment.md"
+    "path": "content/06-cloudflare-deployment.md",
+    "type": "markdown"
   },
   {
     "id": "markdown-syntax",
@@ -60,7 +66,8 @@
     "category": "参考",
     "badge": "DOC",
     "date": "2026-09-19",
-    "path": "content/07-markdown-syntax-reference.md"
+    "path": "content/07-markdown-syntax-reference.md",
+    "type": "markdown"
   },
   {
     "id": "roadmap",
@@ -69,7 +76,8 @@
     "category": "规划",
     "badge": "PLAN",
     "date": "2026-09-19",
-    "path": "content/08-project-roadmap.md"
+    "path": "content/08-project-roadmap.md",
+    "type": "markdown"
   },
   {
     "id": "science-museum",
@@ -78,6 +86,47 @@
     "category": "征文",
     "badge": "ESSAY",
     "date": "2026-09-19",
-    "path": "content/走进科技馆，放飞科技梦.md"
+    "path": "content/走进科技馆，放飞科技梦.md",
+    "type": "markdown"
+  },
+  {
+    "id": "30392d7379",
+    "filename": "09-system-architecture-notes.txt",
+    "title": "系统底层架构设计与日常运维随手记",
+    "category": "文本",
+    "badge": "TXT",
+    "type": "text",
+    "date": "2026-10-01",
+    "path": "content/09-system-architecture-notes.txt"
+  },
+  {
+    "id": "31302d7072",
+    "filename": "10-project-specification.docx",
+    "title": "工作台文档中心工程规范说明 (Word 格式)",
+    "category": "Word",
+    "badge": "WORD",
+    "type": "word",
+    "date": "2026-10-01",
+    "path": "content/10-project-specification.docx"
+  },
+  {
+    "id": "31312d6761",
+    "filename": "11-game-arcade-matrix.xlsx",
+    "title": "小游戏配置参数与性能指标表 (Excel 格式)",
+    "category": "表格",
+    "badge": "EXCEL",
+    "type": "excel",
+    "date": "2026-10-01",
+    "path": "content/11-game-arcade-matrix.xlsx"
+  },
+  {
+    "id": "31322d6465",
+    "filename": "12-developer-handbook.pdf",
+    "title": "工程技术架构与开发手册 (PDF 格式)",
+    "category": "PDF",
+    "badge": "PDF",
+    "type": "pdf",
+    "date": "2026-10-01",
+    "path": "content/12-developer-handbook.pdf"
   }
 ]

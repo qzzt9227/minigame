@@ -1,0 +1,16 @@
+# 系统底层架构设计与日常运维随手记
+// 记录时间: 2026-10-01 11:00:00
+// 架构性质: 零构建纯静态 (Zero-Build Pure Static)
+
+[一、静态托管与网络边缘加速]
+1. 采用 Cloudflare Pages 作为全球边缘分发节点，静态资源秒级推送到全球 300+ 边缘网络。
+2. 规避任何 Webpack / Vite 运行时复杂编译，HTML / CSS / JS 原生编写，开箱即开。
+3. 对多格式静态文件（Markdown, TXT, Word, PDF, Excel）提供原生二进制与流式读取通道。
+
+[二、触控控制器规范 (TouchController)]
+- 合成按键事件直接向 window 派发 keydown / keyup，兼容 16 款经典小游戏。
+- 触屏设备自动唤醒虚拟按键，防手忙脚乱并附带微震动触觉反馈。
+
+[三、调色盘与组件规范]
+- 全光谱 RGB 取色，实时同步调色结果至 localStorage。
+- 保证高对比度赛博暗色美学，字体采用 Rajdhani 与 Fira Code 双驱搭配。

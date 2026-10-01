@@ -24,10 +24,10 @@ minigame-master/
     ├── index.html        # 导航中枢主结构（状态栏、搜索控制台、卡片容器、便签抽屉、弹窗）
     ├── style.css         # 深色高对比度样式、切角多边形、动态微光、响应式媒体查询
     ├── app.js            # 核心业务逻辑（Canvas 网格背景、时钟、多引擎搜索、书签 CRUD、便签持久化）
-    ├── docs/             # 📚 个人文档中心与 Markdown 知识库
-    │   ├── index.html    # 文档中心主结构（多选项卡展示、前3行摘要预览、深度阅读器、GitHub同步）
-    │   └── content/      # 存放具体 MD 文档的指定仓库路径
-    │       ├── manifest.json                  # 文档元数据清单（标题、分类、路径、标签）
+    ├── docs/             # 📚 个人文档中心与多格式知识库
+    │   ├── index.html    # 文档中心主结构（多选项卡展示、前3行摘要预览、多格式阅读器、GitHub同步）
+    │   └── content/      # 存放各格式文档的指定仓库路径
+    │       ├── manifest.json                  # 文档元数据清单（标题、分类、路径、标签、格式类型）
     │       ├── 01-welcome-to-docs.md           # 欢迎与使用说明
     │       ├── 02-zero-build-architecture.md   # Zero-Build 纯静态架构规范
     │       ├── 03-touch-controller-api.md      # 触屏控制器 API
@@ -36,6 +36,10 @@ minigame-master/
     │       ├── 06-cloudflare-deployment.md     # Cloudflare Pages 自动化部署与域名绑定
     │       ├── 07-markdown-syntax-reference.md # Markdown 常用语法速查
     │       ├── 08-project-roadmap.md           # 个人工作台未来路线图
+    │       ├── 09-system-architecture-notes.txt# 纯文本架构与日常运维笔记
+    │       ├── 10-project-specification.docx  # Word 格式工程规范说明书
+    │       ├── 11-game-arcade-matrix.xlsx     # Excel 格式游戏配置与性能参数矩阵
+    │       ├── 12-developer-handbook.pdf      # PDF 格式工程技术手册
     │       └── 走进科技馆，放飞科技梦.md       # 高中组科技征文（第一人称散文沉淀）
     └── games/            # 独立小游戏合集目录 (共 16 款)
         ├── index.html    # 游戏大厅 (Arcade Lobby - 分类过滤、即时检索、16 款游戏展示)
@@ -133,27 +137,30 @@ minigame-master/
    - 降低默认过快速度、扩大穿透空隙与球拍长度，大幅提高反应宽容度；
    - 标配自定义弹窗：自由调控飞行速度/初速度、管道间距与空隙、球拍长短与 AI 难度。
 
-### 3.4 个人文档中心与 Markdown 知识库 (`dist/docs/index.html`)
-- **设计初衷**：在导航与小游戏合集之外，开辟独立的 Markdown 文档与知识沉淀展示页面，支持对文档进行结构化多选项卡预览与阅读。
+### 3.4 个人文档中心与多格式知识库 (`dist/docs/index.html`)
+- **设计初衷**：在导航与小游戏合集之外，开辟独立的高性能多格式文档展示页面，全面支持 Markdown、纯文本 TXT、Word (.docx)、PDF 及 Excel (.xlsx / .csv) 的在线深度解析预览与直接下载。
 - **数据来源规范**：
-  - 文档严格限定为 `.md` 格式，默认存放于 GitHub 仓库指定路径 `dist/docs/content/`。
-  - 支持双通道获取：本地/相对路径 0ms 秒开读取，以及通过 GitHub API 动态拉取远程仓库提交的新文档。
+  - 支持扩展名：`.md`, `.markdown`, `.txt`, `.docx`, `.doc`, `.pdf`, `.xlsx`, `.xls`, `.csv`，存放于指定路径 `dist/docs/content/`。
+  - 双通道获取：本地/相对路径 0ms 秒开读取，以及通过 GitHub API / GitHub Raw 动态拉取远程仓库提交的各种格式文档。
   - 支持在 UI 中自由配置 GitHub 仓库源（`owner/repo`、分支、目标路径）。
 - **多选项卡与前 3 行预览展示规则**：
-  - 页面顶部提供自适应卡片式选项卡阵列（Tabs Gallery）。
-  - 核心展示算法自动过滤空行与全分隔线，精准提取每个 `.md` 文档的**前 3 行有效内容**，带代码行号高亮展示在选项卡内。
-  - 选项卡支持即时模糊搜索过滤、分类标签切换，以及活动项霓虹高光反馈。
-- **具体文档深度阅读器**：
-  - 点击任何选项卡即刻激活该文档，主阅读区实时调用内置零依赖 Markdown 引擎渲染完整正文。
-  - 支持代码语法高亮块、表格、任务清单、引用块、行数与字数统计。
-  - 提供一键复制 Markdown 全文、在 GitHub 仓库查看原文件、以及源码与渲染视图自由切换。
+  - 页面顶部提供自适应卡片式选项卡阵列（Tabs Gallery），按格式提供专属荧光徽章（`WORD` / `PDF` / `EXCEL` / `TXT` / `DOC` 等）。
+  - **文本类文档 (MD / TXT)**：自动过滤空白行与分隔线，精准提取前 3 行有效内容，带代码行号高亮展示在选项卡内。
+  - **二进制类文档 (Word / PDF / Excel)**：自动生成格式类型、文件名及交互指引卡片预览，无需首屏全量预加载庞大二进制文件。
+  - 选项卡支持即时模糊搜索过滤（标题、文件名、预览行）、分类标签切换（全部格式、Word、PDF、表格、文本等），以及活动项高光反馈。
+- **多格式具体文档深度阅读器 (Universal Preview Dispatcher)**：
+  - **Markdown (.md)**：内置零依赖轻量 Markdown 引擎实时渲染，支持标题、表格、任务清单、引用块与代码语法高亮。
+  - **纯文本 (.txt)**：定制带有微行号（Line Numbers）的深色赛博代码风格视口，横向滚动与等宽字体排版。
+  - **Word 文档 (.docx)**：集成前端轻量解析库 `Mammoth.js`（v1.6.0），将 Word 排版、标题、列表及复杂数据表直接转换为语义化语义 HTML，并配以专属纸张卡片容器。
+  - **Excel 表格 (.xlsx / .xls / .csv)**：集成 `SheetJS`（`xlsx.full.min.js` v0.18.5），自动提取工作簿所有 Sheet 生成顶部选项卡，将单元格解析渲染为带行列标头（A, B, C... / 1, 2, 3...）的赛博深色数据网格。
+  - **PDF 电子文档 (.pdf)**：利用现代浏览器原生高性能 PDF 视口嵌入 `<iframe>`，支持原生缩放、翻页、搜索，并配有「↗ 全屏/新窗口查看 PDF」直达锚点。
   - **文档深度链接与地址栏动态同步 (Deep Linking & History API)**：
-    - 点击或切换文档时，地址栏自动通过 `history.pushState` 无刷新同步为 `?doc=<文件名>`（如 `?doc=走进科技馆，放飞科技梦.md`）。
+    - 点击或切换任意格式文档时，地址栏自动通过 `history.pushState` 无刷新同步为 `?doc=<文件名>`（如 `?doc=10-project-specification.docx`）。
     - 外部访问直接输入或分享带 `?doc=` 或 `#doc=` 的 URL，页面秒级定位并高亮渲染对应文档。
     - 完整支持浏览器前进/后退（`popstate` / `hashchange`）导航与一键复制直达链接。
-  - **仓库源原生一键下载文档 (One-Click Repo Document Download)**：
+  - **仓库源通用一键下载引擎 (Universal Repo File Downloader)**：
     - 阅读器顶部工具栏提供醒目的「📥 一键下载文档」按钮，每个选项卡卡片底部亦标配「📥 下载」快捷入口。
-    - 下载源严格绑定 GitHub 仓库：优先从 GitHub Raw 直链拉取最新源文件，自动回退本地仓库副本，利用标准 UTF-8 Markdown Blob 触发浏览器本地保存，规避跨域限制。
+    - 统一采用二进制与文本自适应 `Blob / ObjectURL` 机制，针对各格式精准注入 MIME 类型（如 `application/vnd.openxmlformats-officedocument...`、`application/pdf` 等），彻底解决 GitHub Raw 跨域 `download` 属性失效及二进制文件乱码问题。
 
 ### 3.5 视觉层与交互背景
 - **Canvas 节点交互网络** (`#canvasBackground`)：
@@ -221,10 +228,10 @@ python -m http.server 8080 -d dist
    - 严禁在每个游戏内部重复写死独立的虚拟十字键或按键 CSS，统一调用 `TouchController.init(...)` 配置。
    - 每个游戏必须提供双向导航返回链（`← 游戏大厅`、`⌂ 导航中枢`）。
    - 音效必须使用 Web Audio API 纯代码实时合成，禁止引入外部大型 mp3/wav 资源。
-5. **MD 文档发现与自动双分支推送铁律 (Mandatory Markdown Sync & Dual-Branch Push Rule)**：
-   - **核心指令**：以后只要在 `dist/docs/content/` 路径下发现新增或修改了 `.md` 文档，一律同步索引并推送到 GitHub 的 `master` 和 `main` 分支。
+5. **多格式文档发现与自动双分支推送铁律 (Mandatory Multi-Format Docs Sync & Dual-Branch Push Rule)**：
+   - **核心指令**：以后只要在 `dist/docs/content/` 路径下发现新增或修改了文档（涵盖 `.md`, `.markdown`, `.txt`, `.docx`, `.pdf`, `.xlsx`, `.xls`, `.csv`），一律同步索引并推送到 GitHub 的 `master` 和 `main` 分支。
    - **自动化工具**：
      - `npm run sync-docs`：扫描 `dist/docs/content/` 并自动刷新 `manifest.json`。
-     - `npm run push-docs`：刷新索引并立即双推至 `origin master` 和 `origin main`。
-     - `npm run watch-docs`（或双击 `scripts/watch-docs.bat`）：后台守护监听，检测到新 MD 文件时 1.5 秒防抖自动双分支推送。
+     - `npm run push-docs`：刷新多格式索引并立即双推至 `origin master` 和 `origin main`。
+     - `npm run watch-docs`（或双击 `scripts/watch-docs.bat`）：后台守护监听，检测到新文档文件时 1.5 秒防抖自动双分支推送。
    - **代理执行要求**：AI 代理只要检测到 `dist/docs/content/` 有文件变动，必须执行全流程（索引更新 + git commit + push master + push main）。

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 文档自动化索引与双分支推送脚本
  * 运行方式:
  *   node scripts/sync-docs.js         # 仅同步更新 manifest.json
@@ -19,27 +19,65 @@ function getTodayString() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function extractDocMeta(filename, content) {
-    let title = filename.replace(/\.md$/i, '');
+const SUPPORTED_EXTS = ['.md', '.markdown', '.txt', '.docx', '.doc', '.pdf', '.xlsx', '.xls', '.csv'];
+
+function getDocType(ext) {
+    if (['.md', '.markdown'].includes(ext)) return 'markdown';
+    if (['.txt'].includes(ext)) return 'text';
+    if (['.docx', '.doc'].includes(ext)) return 'word';
+    if (['.pdf'].includes(ext)) return 'pdf';
+    if (['.xlsx', '.xls', '.csv'].includes(ext)) return 'excel';
+    return 'document';
+}
+
+function extractDocMeta(filename, filePath) {
+    const ext = path.extname(filename).toLowerCase();
+    let title = path.basename(filename, ext);
     let category = '文档';
     let badge = 'DOC';
+    const type = getDocType(ext);
 
-    const lines = content.split('\n');
-    for (const line of lines) {
-        const trimmed = line.trim();
-        const h1Match = trimmed.match(/^#\s+(.+)$/);
-        if (h1Match) {
-            title = h1Match[1].trim();
-            break;
-        }
-        const essayTitleMatch = trimmed.match(/^(?:题目|标题)[：:]\s*(.+)$/);
-        if (essayTitleMatch) {
-            title = essayTitleMatch[1].trim();
-            break;
-        }
+    if (['.md', '.markdown', '.txt'].includes(ext)) {
+        try {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const lines = content.split('\n');
+            for (const line of lines) {
+                const trimmed = line.trim();
+                const h1Match = trimmed.match(/^#\s+(.+)$/);
+                if (h1Match) {
+                    title = h1Match[1].trim();
+                    break;
+                }
+                const essayTitleMatch = trimmed.match(/^(?:题目|标题)[：:]\s*(.+)$/);
+                if (essayTitleMatch) {
+                    title = essayTitleMatch[1].trim();
+                    break;
+                }
+            }
+        } catch (e) {}
     }
 
-    if (filename.includes('征文') || content.includes('征文') || content.includes('科技馆')) {
+    if (filename.includes('project-specification')) {
+        title = '工作台文档中心工程规范说明 (Word 格式)';
+    } else if (filename.includes('game-arcade-matrix')) {
+        title = '小游戏配置参数与性能指标表 (Excel 格式)';
+    } else if (filename.includes('developer-handbook')) {
+        title = '工程技术架构与开发手册 (PDF 格式)';
+    }
+
+    if (ext === '.txt') {
+        badge = 'TXT';
+        category = '文本';
+    } else if (ext === '.docx' || ext === '.doc') {
+        badge = 'WORD';
+        category = 'Word';
+    } else if (ext === '.pdf') {
+        badge = 'PDF';
+        category = 'PDF';
+    } else if (['.xlsx', '.xls', '.csv'].includes(ext)) {
+        badge = 'EXCEL';
+        category = '表格';
+    } else if (filename.includes('征文') || filename.includes('科技馆')) {
         category = '征文';
         badge = 'ESSAY';
     } else if (filename.includes('guide') || filename.includes('welcome') || filename.includes('说明')) {
@@ -62,7 +100,7 @@ function extractDocMeta(filename, content) {
         badge = 'PLAN';
     }
 
-    return { title, category, badge };
+    return { title, category, badge, type, ext };
 }
 
 function syncDocs(shouldPush = false) {
@@ -82,14 +120,13 @@ function syncDocs(shouldPush = false) {
     }
 
     const files = fs.readdirSync(CONTENT_DIR);
-    const mdFiles = files.filter(f => f.toLowerCase().endsWith('.md'));
+    const docFiles = files.filter(f => SUPPORTED_EXTS.some(ext => f.toLowerCase().endsWith(ext)));
     let changesMade = false;
     let newFilesList = [];
 
-    for (const file of mdFiles) {
+    for (const file of docFiles) {
         const filePath = path.join(CONTENT_DIR, file);
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const meta = extractDocMeta(file, content);
+        const meta = extractDocMeta(file, filePath);
         const existingIdx = manifest.findIndex(item => item.filename === file);
 
         if (existingIdx === -1) {
@@ -100,22 +137,35 @@ function syncDocs(shouldPush = false) {
                 title: meta.title,
                 category: meta.category,
                 badge: meta.badge,
+                type: meta.type,
                 date: getTodayString(),
                 path: `content/${file}`
             });
             changesMade = true;
             newFilesList.push(file);
-            console.log(`[+] 发现新文档并加入索引: ${file} ("${meta.title}")`);
+            console.log(`[+] 发现新文档并加入索引: ${file} ("${meta.title}" [${meta.badge}])`);
         } else {
+            let updated = false;
             if (manifest[existingIdx].title !== meta.title) {
                 manifest[existingIdx].title = meta.title;
+                updated = true;
+            }
+            if (manifest[existingIdx].type !== meta.type) {
+                manifest[existingIdx].type = meta.type;
+                updated = true;
+            }
+            if (manifest[existingIdx].badge !== meta.badge) {
+                manifest[existingIdx].badge = meta.badge;
+                updated = true;
+            }
+            if (updated) {
                 changesMade = true;
-                console.log(`[*] 更新文档标题: ${file} -> "${meta.title}"`);
+                console.log(`[*] 更新文档信息: ${file} -> "${meta.title}" [${meta.badge}]`);
             }
         }
     }
 
-    const currentFilenames = new Set(mdFiles);
+    const currentFilenames = new Set(docFiles);
     const prevCount = manifest.length;
     manifest = manifest.filter(item => currentFilenames.has(item.filename));
     if (manifest.length !== prevCount) {
@@ -149,7 +199,7 @@ function pushToGit(newFiles = []) {
         console.log('[Git] 暂存所有更改 (git add .)...');
         execSync('git add .', { cwd: ROOT_DIR });
 
-        let commitMsg = 'docs: auto-sync markdown documents';
+        let commitMsg = 'docs: auto-sync documents (multi-format support)';
         if (newFiles.length > 0) {
             commitMsg = `docs: 新增文档同步 [${newFiles.join(', ')}]`;
         }
@@ -174,12 +224,12 @@ const isWatch = args.includes('--watch');
 
 if (isWatch) {
     console.log(`👀 [Watch] 正在监听目录: ${CONTENT_DIR}`);
-    console.log(`⚡ 一旦检测到 .md 文档变动，将自动同步 manifest 并推送到 master 和 main 分支...`);
+    console.log(`⚡ 一旦检测到文档变动（支持 MD/TXT/DOCX/PDF/EXCEL），将自动同步 manifest 并双分支推送...`);
     syncDocs(true);
 
     let debounceTimer = null;
     fs.watch(CONTENT_DIR, (eventType, filename) => {
-        if (!filename || !filename.toLowerCase().endsWith('.md')) return;
+        if (!filename || !SUPPORTED_EXTS.some(ext => filename.toLowerCase().endsWith(ext))) return;
         console.log(`[Event] 检测到文件事件: ${eventType} -> ${filename}`);
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
