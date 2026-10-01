@@ -341,6 +341,19 @@
             border-radius: 4px;
             letter-spacing: 0.5px;
         }
+        .tab-doc-num {
+            font-family: var(--font-code);
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(0, 200, 255, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+        }
         .tab-ext {
             font-family: var(--font-code);
             font-size: 11px;
@@ -1269,19 +1282,29 @@
                 console.warn('读取本地 manifest 失败，将尝试从 GitHub 同步:', e);
             }
 
-            // 若本地为空，初始化内置骨干清单
+            // 若本地为空，初始化内置骨干清单 (包含初始数字编号)
             if (documentsList.length === 0) {
                 documentsList = [
-                    { id: 'welcome', filename: '01-welcome-to-docs.md', title: '个人文档中心与 Markdown 知识库', category: '指南', badge: 'START', path: 'content/01-welcome-to-docs.md', type: 'markdown' },
-                    { id: 'zero-build', filename: '02-zero-build-architecture.md', title: 'Zero-Build 零构建纯静态架构规范', category: '架构', badge: 'ARCH', path: 'content/02-zero-build-architecture.md', type: 'markdown' },
-                    { id: 'touch-controller', filename: '03-touch-controller-api.md', title: 'TouchController 通用移动端虚拟触控控制器 API', category: '开发', badge: 'API', path: 'content/03-touch-controller-api.md', type: 'markdown' },
-                    { id: 'color-picker', filename: '04-color-picker-guide.md', title: 'ColorPicker 独立调色盘与光谱拾色器指南', category: '开发', badge: 'START', path: 'content/04-color-picker-guide.md', type: 'markdown' },
-                    { id: 'game-balance', filename: '05-game-balance-and-physics.md', title: '经典小游戏物理引擎与平衡性调优备忘录', category: '游戏', badge: 'GAME', path: 'content/05-game-balance-and-physics.md', type: 'markdown' },
-                    { id: 'cloudflare', filename: '06-cloudflare-deployment.md', title: 'Cloudflare Pages 静态自动化部署与自定义域名绑定', category: '运维', badge: 'OPS', path: 'content/06-cloudflare-deployment.md', type: 'markdown' },
-                    { id: 'markdown-syntax', filename: '07-markdown-syntax-reference.md', title: 'Markdown 常用排版语法与 GitHub 特性速查', category: '参考', badge: 'DOC', path: 'content/07-markdown-syntax-reference.md', type: 'markdown' },
-                    { id: 'roadmap', filename: '08-project-roadmap.md', title: '个人工作台与小游戏合集未来演进路线图', category: '规划', badge: 'PLAN', path: 'content/08-project-roadmap.md', type: 'markdown' }
+                    { docNo: 1, id: 'welcome', filename: '01-welcome-to-docs.md', title: '个人文档中心与 Markdown 知识库', category: '指南', badge: 'START', path: 'content/01-welcome-to-docs.md', type: 'markdown' },
+                    { docNo: 2, id: 'zero-build', filename: '02-zero-build-architecture.md', title: 'Zero-Build 零构建纯静态架构规范', category: '架构', badge: 'ARCH', path: 'content/02-zero-build-architecture.md', type: 'markdown' },
+                    { docNo: 3, id: 'touch-controller', filename: '03-touch-controller-api.md', title: 'TouchController 通用移动端虚拟触控控制器 API', category: '开发', badge: 'API', path: 'content/03-touch-controller-api.md', type: 'markdown' },
+                    { docNo: 4, id: 'color-picker', filename: '04-color-picker-guide.md', title: 'ColorPicker 独立调色盘与光谱拾色器指南', category: '开发', badge: 'START', path: 'content/04-color-picker-guide.md', type: 'markdown' },
+                    { docNo: 5, id: 'game-balance', filename: '05-game-balance-and-physics.md', title: '经典小游戏物理引擎与平衡性调优备忘录', category: '游戏', badge: 'GAME', path: 'content/05-game-balance-and-physics.md', type: 'markdown' },
+                    { docNo: 6, id: 'cloudflare', filename: '06-cloudflare-deployment.md', title: 'Cloudflare Pages 静态自动化部署与自定义域名绑定', category: '运维', badge: 'OPS', path: 'content/06-cloudflare-deployment.md', type: 'markdown' },
+                    { docNo: 7, id: 'markdown-syntax', filename: '07-markdown-syntax-reference.md', title: 'Markdown 常用排版语法与 GitHub 特性速查', category: '参考', badge: 'DOC', path: 'content/07-markdown-syntax-reference.md', type: 'markdown' },
+                    { docNo: 8, id: 'roadmap', filename: '08-project-roadmap.md', title: '个人工作台与小游戏合集未来演进路线图', category: '规划', badge: 'PLAN', path: 'content/08-project-roadmap.md', type: 'markdown' }
                 ];
             }
+
+            // 规则 (a)(b)(c): 静默给每个文档分配稳定固定的数字编号，新增文件编号变大
+            let maxDocNo = 0;
+            documentsList.forEach((d, idx) => {
+                if (typeof d.docNo !== 'number') {
+                    d.docNo = idx + 1;
+                }
+                if (d.docNo > maxDocNo) maxDocNo = d.docNo;
+            });
+            documentsList.sort((a, b) => (a.docNo || 0) - (b.docNo || 0));
 
             // 处理各格式文档的元数据与前 3 行预览
             await Promise.all(documentsList.map(async (doc) => {
@@ -1334,17 +1357,12 @@
 
             renderTabs();
 
-            // 解析 URL 地址栏中的文档参数 (?doc=... 或 #doc=...)
+            // 解析 URL 地址栏中的文档参数 (?doc=编号 或 #doc=编号)
             const targetDocIdentifier = getDocIdentifierFromUrl();
             let initialDoc = null;
 
             if (targetDocIdentifier) {
-                initialDoc = documentsList.find(d => 
-                    d.filename === targetDocIdentifier || 
-                    d.id === targetDocIdentifier ||
-                    d.title === targetDocIdentifier ||
-                    d.filename.toLowerCase() === targetDocIdentifier.toLowerCase()
-                );
+                initialDoc = findDocByIdentifier(targetDocIdentifier);
             }
 
             // 若无匹配或未传参，默认选中第一篇
@@ -1359,6 +1377,34 @@
 
             updateStatus(`已就绪，共载入 ${documentsList.length} 篇文档 (支持 MD / TXT / Word / PDF / Excel)`);
             document.getElementById('labelTotalDocs').textContent = `${documentsList.length} 篇`;
+        }
+
+        // ==========================================
+        // 根据标识定位文档 (优先按纯数字编号匹配，亦兼容旧式链接并自动规范为编号)
+        // ==========================================
+        function findDocByIdentifier(identifier) {
+            if (!identifier) return null;
+            const str = String(identifier).trim().toLowerCase();
+
+            // 1. 优先按数字编号匹配 (精确匹配 1, 2... 或 01, 02...)
+            const byDocNo = documentsList.find(d => 
+                String(d.docNo) === str || 
+                String(d.docNo).padStart(2, '0') === str
+            );
+            if (byDocNo) return byDocNo;
+
+            // 2. 兼容按安全 ID 匹配
+            const byId = documentsList.find(d => d.id === str);
+            if (byId) return byId;
+
+            // 3. 兼容历史带文件名的旧书签/外部链接 (匹配成功后地址栏会自动静默规范化为编号)
+            const byFilename = documentsList.find(d => 
+                d.filename.toLowerCase() === str || 
+                d.filename.toLowerCase() === decodeURIComponent(str)
+            );
+            if (byFilename) return byFilename;
+
+            return null;
         }
 
         // 手动从 GitHub 仓库指定路径同步 (支持所有扩展名)
@@ -1388,6 +1434,10 @@
 
                 updateStatus(`检索到 ${matchedFiles.length} 个文档文件，正在读取元数据与内容...`);
 
+                let maxDocNo = documentsList.reduce((max, d) => Math.max(max, d.docNo || 0), 0);
+                const existingMap = new Map();
+                documentsList.forEach(d => existingMap.set(d.filename, d.docNo));
+
                 const newDocs = [];
                 for (let f of matchedFiles) {
                     const docType = getDocType(f.name);
@@ -1396,6 +1446,12 @@
                     let title = f.name;
                     let category = 'GitHub';
                     let badge = 'DOC';
+
+                    let docNo = existingMap.get(f.name);
+                    if (!docNo) {
+                        maxDocNo += 1;
+                        docNo = maxDocNo;
+                    }
 
                     if (docType === 'word') {
                         badge = 'WORD';
@@ -1451,6 +1507,7 @@
                     }
 
                     newDocs.push({
+                        docNo: docNo,
                         id: f.name.replace(/[^a-zA-Z0-9_\-]/g, '_'),
                         filename: f.name,
                         title: title,
@@ -1464,18 +1521,14 @@
                     });
                 }
 
+                newDocs.sort((a, b) => a.docNo - b.docNo);
                 documentsList = newDocs;
                 renderTabs();
 
                 const targetDoc = getDocIdentifierFromUrl();
                 let currentDoc = null;
                 if (targetDoc) {
-                    currentDoc = documentsList.find(d => 
-                        d.filename === targetDoc || 
-                        d.id === targetDoc || 
-                        d.title === targetDoc ||
-                        d.filename.toLowerCase() === targetDoc.toLowerCase()
-                    );
+                    currentDoc = findDocByIdentifier(targetDoc);
                 }
                 if (!currentDoc && documentsList.length > 0) currentDoc = documentsList[0];
                 if (currentDoc) selectDocument(currentDoc.id, false);
@@ -1497,11 +1550,14 @@
 
             const filtered = documentsList.filter(doc => {
                 const matchCat = (currentFilterCat === 'all') || (doc.category === currentFilterCat);
-                const q = searchQuery.toLowerCase();
-                const matchSearch = !q || 
-                    doc.title.toLowerCase().includes(q) || 
-                    doc.filename.toLowerCase().includes(q) ||
-                    (doc.previewLines && doc.previewLines.some(l => l.toLowerCase().includes(q)));
+                const rawQ = searchQuery.toLowerCase().trim();
+                const qNum = rawQ.replace(/^#/, '');
+                const matchSearch = !rawQ || 
+                    String(doc.docNo) === qNum ||
+                    String(doc.docNo).padStart(2, '0') === qNum ||
+                    doc.title.toLowerCase().includes(rawQ) || 
+                    doc.filename.toLowerCase().includes(rawQ) ||
+                    (doc.previewLines && doc.previewLines.some(l => l.toLowerCase().includes(rawQ)));
                 return matchCat && matchSearch;
             });
 
@@ -1519,6 +1575,7 @@
                 const p1 = (doc.previewLines && doc.previewLines[0]) || '// 行 1';
                 const p2 = (doc.previewLines && doc.previewLines[1]) || '// 行 2';
                 const p3 = (doc.previewLines && doc.previewLines[2]) || '// 行 3';
+                const docNoFormatted = String(doc.docNo).padStart(2, '0');
 
                 const card = document.createElement('div');
                 card.className = `doc-tab-card ${isActive ? 'active' : ''}`;
@@ -1526,7 +1583,10 @@
 
                 card.innerHTML = `
                     <div class="tab-card-top">
-                        <span class="tab-badge ${doc.badge || 'DOC'}">${doc.badge || 'DOC'}</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span class="tab-doc-num">#${docNoFormatted}</span>
+                            <span class="tab-badge ${doc.badge || 'DOC'}">${doc.badge || 'DOC'}</span>
+                        </div>
                         <span class="tab-ext">${doc.category || 'MD'}</span>
                     </div>
 
@@ -1549,7 +1609,7 @@
                     </div>
 
                     <div class="tab-card-footer">
-                        <span>📄 ${escapeHtml(doc.filename)}</span>
+                        <span>№ ${docNoFormatted} • ${escapeHtml(doc.filename)}</span>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <button class="tab-card-dl-btn" data-doc-id="${doc.id}" title="一键从仓库下载该文档">
                                 <span>📥</span> <span>下载</span>
@@ -1590,10 +1650,10 @@
             const docType = doc.type || getDocType(doc.filename);
             doc.type = docType;
 
-            // 动态同步浏览器标签页标题
-            document.title = `${doc.title} // 个人文档中心`;
+            // 动态同步浏览器标签页标题 (显示数字编号)
+            document.title = `[#${doc.docNo}] ${doc.title} // 个人文档中心`;
 
-            // 同步无刷新更新浏览器地址栏
+            // 同步无刷新更新浏览器地址栏 (严格使用固定数字编号，绝不泄露文件名)
             if (shouldUpdateUrl) {
                 syncUrlToAddressBar(doc, false);
             }
@@ -1604,7 +1664,11 @@
             });
 
             // 更新阅读器信息
-            document.getElementById('currentDocTitle').innerHTML = `<span>${escapeHtml(doc.title)}</span>`;
+            const docNoStr = String(doc.docNo).padStart(2, '0');
+            document.getElementById('currentDocTitle').innerHTML = `
+                <span class="tab-doc-num" style="font-size:14px; padding:2px 8px; vertical-align:middle;">#${docNoStr}</span>
+                <span>${escapeHtml(doc.title)}</span>
+            `;
             document.getElementById('currentDocFilename').textContent = doc.filename;
             if (doc.date && document.getElementById('currentDocUpdated')) {
                 document.getElementById('currentDocUpdated').textContent = doc.date;
@@ -1855,13 +1919,13 @@
         }
 
         // ==========================================
-        // 8. 地址栏 URL 路由与状态同步
+        // 8. 地址栏 URL 路由与状态同步 (数字编号模式)
         // ==========================================
-        // 获取地址栏指定的文档标识（支持 ?doc=文件名 或 #doc=文件名 / #文件名）
+        // 获取地址栏指定的文档标识（支持 ?doc=编号 或 ?id=编号，亦兼容历史参数）
         function getDocIdentifierFromUrl() {
             try {
                 const params = new URLSearchParams(window.location.search);
-                const queryDoc = params.get('doc');
+                const queryDoc = params.get('doc') || params.get('id');
                 if (queryDoc) {
                     return decodeURIComponent(queryDoc).trim();
                 }
@@ -1872,6 +1936,8 @@
                     let hash = decodeURIComponent(window.location.hash.replace(/^#/, '')).trim();
                     if (hash.startsWith('doc=')) {
                         hash = hash.slice(4).trim();
+                    } else if (hash.startsWith('id=')) {
+                        hash = hash.slice(3).trim();
                     }
                     if (hash) return hash;
                 }
@@ -1880,23 +1946,26 @@
             return null;
         }
 
-        // 将当前选中的文档动态同步到浏览器地址栏
+        // 将当前选中的文档动态同步到浏览器地址栏 (核心铁律：地址栏仅显示固定数字编号，绝不显示文档名称)
         function syncUrlToAddressBar(doc, isReplace = false) {
             if (!doc) return;
-            const docParam = doc.filename || doc.id;
+            // 严格仅以固定数字编号作为路由参数
+            const docParam = String(doc.docNo || 1);
 
             try {
                 const currentUrl = new URL(window.location.href);
-                // 参数已一致则不重复 pushState
+                // 清理旧可能存在的冗余参数
+                currentUrl.searchParams.delete('id');
+                // 若地址栏参数已是该数字编号，不重复 pushState
                 if (currentUrl.searchParams.get('doc') === docParam) {
                     return;
                 }
                 currentUrl.searchParams.set('doc', docParam);
 
                 if (isReplace) {
-                    window.history.replaceState({ docId: doc.id, filename: doc.filename }, '', currentUrl.toString());
+                    window.history.replaceState({ docId: doc.id, docNo: doc.docNo }, '', currentUrl.toString());
                 } else {
-                    window.history.pushState({ docId: doc.id, filename: doc.filename }, '', currentUrl.toString());
+                    window.history.pushState({ docId: doc.id, docNo: doc.docNo }, '', currentUrl.toString());
                 }
             } catch (err) {
                 // file:// 协议或安全受限环境平滑回退至 hash 锚点
@@ -2059,7 +2128,7 @@
             }
         });
 
-        // 复制当前文档直达分享链接
+        // 复制当前文档直达分享链接 (纯数字编号路由，不包含文档名称)
         document.getElementById('btnCopyDocLink').addEventListener('click', async function() {
             const doc = documentsList.find(d => d.id === activeDocId);
             if (!doc) return;
@@ -2068,13 +2137,14 @@
                 let shareUrl = window.location.href;
                 try {
                     const u = new URL(window.location.href);
-                    u.searchParams.set('doc', doc.filename);
+                    u.searchParams.delete('id');
+                    u.searchParams.set('doc', doc.docNo);
                     shareUrl = u.toString();
                 } catch (e) {}
 
                 await navigator.clipboard.writeText(shareUrl);
                 const originalText = this.innerHTML;
-                this.innerHTML = '<span>✔</span> <span>已复制直达链接</span>';
+                this.innerHTML = '<span>✔</span> <span>已复制编号直达链接</span>';
                 setTimeout(() => { this.innerHTML = originalText; }, 2000);
             } catch (err) {
                 alert('已自动同步至上方地址栏，可直接复制浏览器地址栏 URL');
@@ -2085,12 +2155,7 @@
         window.addEventListener('popstate', () => {
             const target = getDocIdentifierFromUrl();
             if (target) {
-                const found = documentsList.find(d => 
-                    d.filename === target || 
-                    d.id === target || 
-                    d.title === target ||
-                    d.filename.toLowerCase() === target.toLowerCase()
-                );
+                const found = findDocByIdentifier(target);
                 if (found && found.id !== activeDocId) {
                     selectDocument(found.id, false);
                 }
@@ -2103,12 +2168,7 @@
         window.addEventListener('hashchange', () => {
             const target = getDocIdentifierFromUrl();
             if (target) {
-                const found = documentsList.find(d => 
-                    d.filename === target || 
-                    d.id === target || 
-                    d.title === target ||
-                    d.filename.toLowerCase() === target.toLowerCase()
-                );
+                const found = findDocByIdentifier(target);
                 if (found && found.id !== activeDocId) {
                     selectDocument(found.id, false);
                 }

@@ -124,14 +124,28 @@ function syncDocs(shouldPush = false) {
     let changesMade = false;
     let newFilesList = [];
 
+    // 确保已有项目均拥有稳定不变的固定数字编号 (docNo)
+    let maxDocNo = 0;
+    manifest.forEach((item, idx) => {
+        if (typeof item.docNo !== 'number') {
+            item.docNo = idx + 1;
+            changesMade = true;
+        }
+        if (item.docNo > maxDocNo) {
+            maxDocNo = item.docNo;
+        }
+    });
+
     for (const file of docFiles) {
         const filePath = path.join(CONTENT_DIR, file);
         const meta = extractDocMeta(file, filePath);
         const existingIdx = manifest.findIndex(item => item.filename === file);
 
         if (existingIdx === -1) {
+            maxDocNo += 1;
             const safeId = Buffer.from(file).toString('hex').slice(0, 10);
             manifest.push({
+                docNo: maxDocNo,
                 id: safeId,
                 filename: file,
                 title: meta.title,
@@ -143,7 +157,7 @@ function syncDocs(shouldPush = false) {
             });
             changesMade = true;
             newFilesList.push(file);
-            console.log(`[+] 发现新文档并加入索引: ${file} ("${meta.title}" [${meta.badge}])`);
+            console.log(`[+] 发现新文档并分配编号: #${maxDocNo} ${file} ("${meta.title}" [${meta.badge}])`);
         } else {
             let updated = false;
             if (manifest[existingIdx].title !== meta.title) {

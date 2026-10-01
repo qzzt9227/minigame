@@ -154,10 +154,11 @@ minigame-master/
   - **Word 文档 (.docx)**：集成前端轻量解析库 `Mammoth.js`（v1.6.0），将 Word 排版、标题、列表及复杂数据表直接转换为语义化语义 HTML，并配以专属纸张卡片容器。
   - **Excel 表格 (.xlsx / .xls / .csv)**：集成 `SheetJS`（`xlsx.full.min.js` v0.18.5），自动提取工作簿所有 Sheet 生成顶部选项卡，将单元格解析渲染为带行列标头（A, B, C... / 1, 2, 3...）的赛博深色数据网格。
   - **PDF 电子文档 (.pdf)**：利用现代浏览器原生高性能 PDF 视口嵌入 `<iframe>`，支持原生缩放、翻页、搜索，并配有「↗ 全屏/新窗口查看 PDF」直达锚点。
-  - **文档深度链接与地址栏动态同步 (Deep Linking & History API)**：
-    - 点击或切换任意格式文档时，地址栏自动通过 `history.pushState` 无刷新同步为 `?doc=<文件名>`（如 `?doc=10-project-specification.docx`）。
-    - 外部访问直接输入或分享带 `?doc=` 或 `#doc=` 的 URL，页面秒级定位并高亮渲染对应文档。
-    - 完整支持浏览器前进/后退（`popstate` / `hashchange`）导航与一键复制直达链接。
+  - **文档固定数字编号与地址栏纯数字路由 (Numeric Doc Routing & Fixed Indexing)**：
+    - **编号铁律**：严禁修改文档实际文件名，在网页及 manifest 层面静默为每个文档分配唯一且稳定的固定数字编号（`docNo: 1, 2, 3...`）。新增加文件时，编号自动自增变大（`maxDocNo + 1`）。
+    - **地址栏规则**：点击或打开文档时，上方浏览器地址栏绝对**不显示文档文件名**，而是仅显示数字编号（如 `?doc=1`、`?doc=13`）。
+    - **双向兼容定位**：外部访问直接输入或分享带 `?doc=<编号>` 的 URL，页面秒级定位对应文档；若输入旧式带文件名链接访问，页面自动解析并即刻静默替换地址栏为对应纯数字编号。
+    - 完整支持浏览器前进/后退（`popstate` / `hashchange`）导航与一键复制纯数字直达链接。
   - **仓库源通用一键下载引擎 (Universal Repo File Downloader)**：
     - 阅读器顶部工具栏提供醒目的「📥 一键下载文档」按钮，每个选项卡卡片底部亦标配「📥 下载」快捷入口。
     - 统一采用二进制与文本自适应 `Blob / ObjectURL` 机制，针对各格式精准注入 MIME 类型（如 `application/vnd.openxmlformats-officedocument...`、`application/pdf` 等），彻底解决 GitHub Raw 跨域 `download` 属性失效及二进制文件乱码问题。

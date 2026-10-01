@@ -7,7 +7,8 @@
     "badge": "START",
     "date": "2026-09-19",
     "path": "content/01-welcome-to-docs.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 1
   },
   {
     "id": "zero-build",
@@ -17,7 +18,8 @@
     "badge": "ARCH",
     "date": "2026-09-19",
     "path": "content/02-zero-build-architecture.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 2
   },
   {
     "id": "touch-controller",
@@ -27,7 +29,8 @@
     "badge": "API",
     "date": "2026-09-19",
     "path": "content/03-touch-controller-api.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 3
   },
   {
     "id": "color-picker",
@@ -37,7 +40,8 @@
     "badge": "START",
     "date": "2026-09-19",
     "path": "content/04-color-picker-guide.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 4
   },
   {
     "id": "game-balance",
@@ -47,7 +51,8 @@
     "badge": "GAME",
     "date": "2026-09-19",
     "path": "content/05-game-balance-and-physics.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 5
   },
   {
     "id": "cloudflare",
@@ -57,7 +62,8 @@
     "badge": "OPS",
     "date": "2026-09-19",
     "path": "content/06-cloudflare-deployment.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 6
   },
   {
     "id": "markdown-syntax",
@@ -67,7 +73,8 @@
     "badge": "DOC",
     "date": "2026-09-19",
     "path": "content/07-markdown-syntax-reference.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 7
   },
   {
     "id": "roadmap",
@@ -77,7 +84,8 @@
     "badge": "PLAN",
     "date": "2026-09-19",
     "path": "content/08-project-roadmap.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 8
   },
   {
     "id": "science-museum",
@@ -87,7 +95,8 @@
     "badge": "ESSAY",
     "date": "2026-09-19",
     "path": "content/走进科技馆，放飞科技梦.md",
-    "type": "markdown"
+    "type": "markdown",
+    "docNo": 9
   },
   {
     "id": "30392d7379",
@@ -97,7 +106,8 @@
     "badge": "TXT",
     "type": "text",
     "date": "2026-10-01",
-    "path": "content/09-system-architecture-notes.txt"
+    "path": "content/09-system-architecture-notes.txt",
+    "docNo": 10
   },
   {
     "id": "31302d7072",
@@ -107,7 +117,8 @@
     "badge": "WORD",
     "type": "word",
     "date": "2026-10-01",
-    "path": "content/10-project-specification.docx"
+    "path": "content/10-project-specification.docx",
+    "docNo": 11
   },
   {
     "id": "31312d6761",
@@ -117,7 +128,8 @@
     "badge": "EXCEL",
     "type": "excel",
     "date": "2026-10-01",
-    "path": "content/11-game-arcade-matrix.xlsx"
+    "path": "content/11-game-arcade-matrix.xlsx",
+    "docNo": 12
   },
   {
     "id": "31322d6465",
@@ -127,6 +139,7 @@
     "badge": "PDF",
     "type": "pdf",
     "date": "2026-10-01",
-    "path": "content/12-developer-handbook.pdf"
+    "path": "content/12-developer-handbook.pdf",
+    "docNo": 13
   }
 ]
