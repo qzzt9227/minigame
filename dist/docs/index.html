@@ -663,6 +663,232 @@
         .tab-badge.EXCEL { background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.4); }
         .tab-badge.PDF { background: rgba(244, 63, 94, 0.12); color: #f43f5e; border-color: rgba(244, 63, 94, 0.4); }
         .tab-badge.TXT { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); }
+        .tab-badge.TOOL { background: rgba(0, 255, 157, 0.12); color: var(--neon-green); border-color: rgba(0, 255, 157, 0.4); }
+
+        /* ===== 可下载资源中心 ===== */
+        .resource-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+        }
+        .resource-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            clip-path: var(--clip-md);
+            padding: 16px 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            position: relative;
+            transition: all 0.22s ease-out;
+        }
+        .resource-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-green), var(--primary));
+            opacity: 0.65;
+        }
+        .resource-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-bright);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        .resource-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .resource-size {
+            font-family: var(--font-code);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        .resource-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.5;
+        }
+        .resource-desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        .resource-file {
+            font-family: var(--font-code);
+            font-size: 11.5px;
+            color: var(--primary);
+            background: #090c12;
+            border: 1px solid #19202f;
+            padding: 6px 9px;
+            border-radius: 4px;
+            overflow-wrap: anywhere;
+        }
+        .resource-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .resource-tag {
+            font-size: 11px;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 1px 7px;
+            border-radius: 10px;
+        }
+        .resource-actions {
+            margin-top: auto;
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 4px;
+        }
+        .resource-download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(0, 255, 157, 0.12);
+            border: 1px solid rgba(0, 255, 157, 0.45);
+            color: var(--neon-green);
+            font-family: var(--font-heading);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.18s;
+        }
+        .resource-download-btn:hover {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            color: #05080f;
+            box-shadow: 0 0 14px rgba(0, 255, 157, 0.4);
+        }
+        .resource-download-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+        .resource-empty {
+            grid-column: 1 / -1;
+            padding: 32px;
+            text-align: center;
+            color: var(--text-dim);
+            background: var(--bg-card);
+            border: 1px dashed var(--border-color);
+            clip-path: var(--clip-md);
+        }
+        #resourceSection { scroll-margin-top: 20px; }
+
+        /* ===== 文章中嵌入的一键下载卡片 ===== */
+        .resource-download-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, rgba(0, 255, 157, 0.08), rgba(0, 200, 255, 0.04));
+            border: 1px solid rgba(0, 255, 157, 0.28);
+            border-left: 4px solid var(--neon-green);
+            clip-path: var(--clip-md);
+            padding: 18px 20px;
+            margin: 20px 0;
+        }
+        .resource-download-icon {
+            width: 44px;
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(0, 255, 157, 0.1);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .resource-download-content {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .resource-download-title {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            word-break: break-all;
+        }
+        .resource-download-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .resource-download-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-family: var(--font-code);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        .inline-download-link {
+            color: var(--neon-green);
+            font-weight: 600;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        /* ===== Markdown 代码块头部与复制按钮 ===== */
+        .code-block-wrap {
+            margin: 16px 0;
+            border: 1px solid #1c2436;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #090c13;
+        }
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111624;
+            border-bottom: 1px solid #1c2436;
+            padding: 7px 14px;
+        }
+        .code-lang {
+            font-family: var(--font-code);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .code-copy-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-family: var(--font-code);
+            font-size: 11px;
+            padding: 3px 9px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .code-copy-btn:hover {
+            color: var(--neon-green);
+            border-color: rgba(0, 255, 157, 0.45);
+        }
+        .code-block-wrap pre {
+            margin: 0;
+            border: none;
+            border-radius: 0;
+            max-height: 640px;
+            overflow: auto;
+        }
 
         /* ===== 多格式预览专属容器样式 ===== */
         
@@ -960,6 +1186,7 @@
             <div class="header-actions">
                 <a href="../index.html" class="nav-btn">⌂ 导航中枢</a>
                 <a href="../games/index.html" class="nav-btn">🎮 游戏大厅</a>
+                <a href="#resourceSection" class="nav-btn">🧰 资源下载</a>
                 <button class="nav-btn primary" id="btnSyncGithub" title="从 GitHub 仓库拉取最新提交的文档">
                     <span>🔄</span> <span>同步 GitHub 仓库</span>
                 </button>
@@ -1009,6 +1236,7 @@
                 <button class="cat-btn" data-cat="游戏">游戏</button>
                 <button class="cat-btn" data-cat="运维">运维</button>
                 <button class="cat-btn" data-cat="征文">征文</button>
+                <button class="cat-btn" data-cat="工具">工具</button>
             </div>
 
             <div class="search-box">
@@ -1028,6 +1256,19 @@
 
             <div class="doc-tabs-gallery" id="docTabsGallery">
                 <!-- 动态生成选项卡，每个卡片内置前 3 行预览 -->
+            </div>
+        </section>
+
+        <!-- ===== 可下载资源中心 ===== -->
+        <section id="resourceSection">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>🧰 可下载资源</span>
+                    <span class="section-hint">(文章配套的脚本与小型工具，点击即可一键下载到本地)</span>
+                </div>
+            </div>
+            <div class="resource-gallery" id="resourceGallery">
+                <div class="resource-empty">正在加载资源清单...</div>
             </div>
         </section>
 
@@ -1135,9 +1376,277 @@
         let isRawView = false;
 
         // ==========================================
+        // 2. 增强版 Markdown 解析器（代码复制 / 下载卡片 / 资源链接）
+        // ==========================================
+        function normalizeResourcePath(rawPath) {
+            let p = String(rawPath || '').trim();
+            if (!p || /^https?:\/\//i.test(p)) return p;
+            p = p.replace(/^\.\//, '');
+            while (p.indexOf('../') === 0) p = p.slice(3);
+            if (p.indexOf('dist/docs/') === 0) p = p.slice('dist/docs/'.length);
+            if (p.charAt(0) === '/') p = p.slice(1);
+            return p;
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderInline(text) {
+            const store = [];
+            let html = String(text == null ? '' : text);
+
+            html = html.replace(/`([^`]+)`/g, (m, code) => {
+                store.push('<code>' + escapeHtml(code) + '</code>');
+                return '@@PIC' + (store.length - 1) + '@@';
+            });
+
+            html = html.replace(/!\[([^\]]*)\]\(([^) ]+)\)/g, (m, alt, url) => {
+                store.push('<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(alt) + '" loading="lazy">');
+                return '@@PIC' + (store.length - 1) + '@@';
+            });
+
+            html = escapeHtml(html);
+
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+            html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+            html = html.replace(/\[([^\]]+)\]\(([^) ]+)\)/g, (m, label, url) => {
+                const cleanUrl = url.replace(/&amp;/g, '&');
+                if (/(^|\/)resources\//i.test(cleanUrl)) {
+                    const p = normalizeResourcePath(cleanUrl);
+                    const filename = p.split('/').pop();
+                    return '<a class="inline-download-link" href="' + escapeHtml(p) + '" download data-resource-path="' + escapeHtml(p) + '" data-resource-name="' + escapeHtml(filename) + '">' + label + '</a>';
+                }
+                return '<a href="' + escapeHtml(cleanUrl) + '" target="_blank" rel="noopener">' + label + '</a>';
+            });
+
+            html = html.replace(/@@PIC([0-9]+)@@/g, (m, idx) => store[Number(idx)] || '');
+            return html;
+        }
+
+        function renderCodeBlock(code, lang) {
+            const language = String(lang || '').trim().split(' ')[0].toLowerCase();
+            const labelMap = {
+                bat: 'BAT / CMD', cmd: 'BAT / CMD', ps1: 'PowerShell', powershell: 'PowerShell',
+                js: 'JavaScript', javascript: 'JavaScript', json: 'JSON', html: 'HTML', css: 'CSS',
+                md: 'Markdown', markdown: 'Markdown', txt: 'TEXT', text: 'TEXT',
+                python: 'Python', py: 'Python', sh: 'Shell', bash: 'Bash'
+            };
+            const label = labelMap[language] || (language ? language.toUpperCase() : 'CODE');
+            const safeLang = language.replace(/[^a-z0-9_-]/g, '') || 'text';
+            const copyPayload = encodeURIComponent(code);
+            return '<div class="code-block-wrap">'
+                + '<div class="code-block-header">'
+                + '<span class="code-lang">' + escapeHtml(label) + '</span>'
+                + '<button type="button" class="code-copy-btn" data-copy-code="' + copyPayload + '">📋 复制代码</button>'
+                + '</div>'
+                + '<pre><code class="language-' + safeLang + '">' + escapeHtml(code) + '</code></pre>'
+                + '</div>';
+        }
+
+        function renderDownloadCard(body) {
+            const opts = {};
+            String(body || '').split('\n').forEach(line => {
+                const idx = line.indexOf('=');
+                if (idx > 0) {
+                    const key = line.slice(0, idx).trim().toLowerCase();
+                    if (key) opts[key] = line.slice(idx + 1).trim();
+                }
+            });
+            const filePath = normalizeResourcePath(opts.file || '');
+            const filename = opts.filename || filePath.split('/').pop() || '资源文件';
+            const title = opts.title || filename;
+            const desc = opts.desc || opts.description || '';
+            const badge = opts.badge || (filename.split('.').pop() || 'FILE').toUpperCase();
+            const size = opts.size || '';
+            const meta = [];
+            if (size) meta.push('<span>' + escapeHtml(size) + '</span>');
+            meta.push('<span>' + escapeHtml(filename) + '</span>');
+            const downloadBtn = filePath
+                ? '<a class="resource-download-btn" href="' + escapeHtml(filePath) + '" download data-resource-path="' + escapeHtml(filePath) + '" data-resource-name="' + escapeHtml(filename) + '">📥 一键下载</a>'
+                : '';
+            return '<div class="resource-download-card">'
+                + '<div class="resource-download-icon">📦</div>'
+                + '<div class="resource-download-content">'
+                + '<div class="resource-download-title">' + escapeHtml(title) + '</div>'
+                + (desc ? '<div class="resource-download-desc">' + escapeHtml(desc) + '</div>' : '')
+                + '<div class="resource-download-meta"><span class="tab-badge ' + escapeHtml(badge) + '">' + escapeHtml(badge) + '</span>' + meta.join('<span>•</span>') + '</div>'
+                + '</div>'
+                + downloadBtn
+                + '</div>';
+        }
+
+        function parseMarkdown(mdText) {
+            if (!mdText) return '<p>(此文档暂无内容)</p>';
+
+            const tokens = [];
+            let source = String(mdText).replace(/\r\n?/g, '\n');
+
+            source = source.replace(/```([^`\n]*)\n([^]*?)```/g, (m, lang, code) => {
+                const cleanCode = code.endsWith('\n') ? code.slice(0, -1) : code;
+                tokens.push(renderCodeBlock(cleanCode, lang));
+                return '\n\n@@BILI' + (tokens.length - 1) + '@@\n\n';
+            });
+
+            source = source.replace(/^:::download *\n([^]*?)^::: *$/gm, (m, body) => {
+                tokens.push(renderDownloadCard(body));
+                return '\n\n@@BILI' + (tokens.length - 1) + '@@\n\n';
+            });
+
+            const lines = source.split('\n');
+            const out = [];
+            let paragraph = [];
+            let listType = null;
+            let listItems = [];
+
+            const flushParagraph = () => {
+                if (paragraph.length) {
+                    out.push('<p>' + paragraph.map(renderInline).join('<br>') + '</p>');
+                    paragraph = [];
+                }
+            };
+            const flushList = () => {
+                if (listType && listItems.length) {
+                    out.push('<' + listType + '>' + listItems.join('') + '</' + listType + '>');
+                }
+                listType = null;
+                listItems = [];
+            };
+            const isTableSeparator = (text) => /^\|?[ :|-]+\|[ :|-]*$/.test(text) && text.indexOf('-') >= 0;
+            const splitTableRow = (text) => {
+                let row = text.trim();
+                if (row.charAt(0) === '|') row = row.slice(1);
+                if (row.charAt(row.length - 1) === '|') row = row.slice(0, -1);
+                return row.split('|').map(cell => cell.trim());
+            };
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmed = line.trim();
+
+                if (!trimmed) {
+                    flushParagraph();
+                    flushList();
+                    continue;
+                }
+
+                const tokenMatch = trimmed.match(/^@@BILI([0-9]+)@@$/);
+                if (tokenMatch) {
+                    flushParagraph();
+                    flushList();
+                    out.push(tokens[Number(tokenMatch[1])] || '');
+                    continue;
+                }
+
+                const headingMatch = trimmed.match(/^(#{1,6}) +(.*)$/);
+                if (headingMatch) {
+                    flushParagraph();
+                    flushList();
+                    const level = headingMatch[1].length;
+                    out.push('<h' + level + '>' + renderInline(headingMatch[2]) + '</h' + level + '>');
+                    continue;
+                }
+
+                if (/^题目： *\S/.test(trimmed)) {
+                    flushParagraph();
+                    flushList();
+                    out.push('<h1>' + renderInline(trimmed.replace(/^题目： */, '')) + '</h1>');
+                    continue;
+                }
+                if (/^参赛组别： *\S/.test(trimmed)) {
+                    flushParagraph();
+                    flushList();
+                    out.push('<p>🏷️ 参赛组别: ' + renderInline(trimmed.replace(/^参赛组别： */, '')) + '</p>');
+                    continue;
+                }
+
+                if (/^-{3,}$/.test(trimmed)) {
+                    flushParagraph();
+                    flushList();
+                    out.push('<hr>');
+                    continue;
+                }
+
+                if (trimmed.charAt(0) === '>') {
+                    flushParagraph();
+                    flushList();
+                    const quoteLines = [];
+                    while (i < lines.length && lines[i].trim().charAt(0) === '>') {
+                        quoteLines.push(lines[i].trim().replace(/^> ?/, ''));
+                        i++;
+                    }
+                    i--;
+                    out.push('<blockquote>' + quoteLines.map(renderInline).join('<br>') + '</blockquote>');
+                    continue;
+                }
+
+                if (trimmed.indexOf('|') >= 0 && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+                    flushParagraph();
+                    flushList();
+                    const headerCells = splitTableRow(trimmed);
+                    i++;
+                    const bodyRows = [];
+                    while (i + 1 < lines.length && lines[i + 1].indexOf('|') >= 0 && lines[i + 1].trim()) {
+                        i++;
+                        bodyRows.push(splitTableRow(lines[i]));
+                    }
+                    let tableHtml = '<table><thead><tr>';
+                    headerCells.forEach(cell => { tableHtml += '<th>' + renderInline(cell) + '</th>'; });
+                    tableHtml += '</tr></thead><tbody>';
+                    bodyRows.forEach(row => {
+                        tableHtml += '<tr>';
+                        row.forEach(cell => { tableHtml += '<td>' + renderInline(cell) + '</td>'; });
+                        tableHtml += '</tr>';
+                    });
+                    tableHtml += '</tbody></table>';
+                    out.push(tableHtml);
+                    continue;
+                }
+
+                const taskMatch = trimmed.match(/^[-*] +\[([ xX])\] +(.*)$/);
+                if (taskMatch) {
+                    if (listType !== 'ul') { flushParagraph(); flushList(); listType = 'ul'; }
+                    const checked = taskMatch[1].toLowerCase() === 'x';
+                    listItems.push('<li class="task-item">' + (checked ? '☑ ' : '☐ ') + renderInline(taskMatch[2]) + '</li>');
+                    continue;
+                }
+
+                const ulMatch = trimmed.match(/^[-*] +(.*)$/);
+                if (ulMatch) {
+                    if (listType !== 'ul') { flushParagraph(); flushList(); listType = 'ul'; }
+                    listItems.push('<li>' + renderInline(ulMatch[1]) + '</li>');
+                    continue;
+                }
+
+                const olMatch = trimmed.match(/^[0-9]+\. +(.*)$/);
+                if (olMatch) {
+                    if (listType !== 'ol') { flushParagraph(); flushList(); listType = 'ol'; }
+                    listItems.push('<li>' + renderInline(olMatch[1]) + '</li>');
+                    continue;
+                }
+
+                flushList();
+                paragraph.push(trimmed);
+            }
+
+            flushParagraph();
+            flushList();
+
+            return out.join('\n').replace(/@@BILI([0-9]+)@@/g, (m, idx) => tokens[Number(idx)] || '');
+        }
+
+        // ==========================================
         // 2. 轻量零依赖 Markdown 解析器 (Zero-Build Parser)
         // ==========================================
-        function parseMarkdown(mdText) {
+        function parseMarkdownLegacy(mdText) {
             if (!mdText) return '<p style="color:#64748b;">(此文档暂无内容)</p>';
 
             let html = mdText
@@ -2090,6 +2599,194 @@
             }
         }
 
+        // ==========================================
+        // 可下载资源中心：清单加载 / 卡片渲染 / 一键下载
+        // ==========================================
+        const RESOURCE_FALLBACK_LIST = [
+            {
+                id: 'restore-shortcut-name',
+                title: 'Windows 桌面快捷方式名称一键恢复脚本',
+                filename: 'Restore-shortcut-to-its-original-name.cmd',
+                path: 'resources/Restore-shortcut-to-its-original-name.cmd',
+                repoPath: 'dist/docs/resources/Restore-shortcut-to-its-original-name.cmd',
+                badge: 'CMD',
+                size: '15.9 KB',
+                description: '扫描桌面快捷方式，结合开始菜单索引、快捷方式描述、程序版本信息与目标文件名，将名称恢复为程序原始显示名。',
+                tags: ['Windows', '快捷方式', '系统脚本']
+            }
+        ];
+        let resourceList = [];
+
+        async function loadResources() {
+            const gallery = document.getElementById('resourceGallery');
+            if (!gallery) return;
+            try {
+                const res = await fetch('resources/manifest.json', { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                resourceList = Array.isArray(data.resources) ? data.resources : [];
+            } catch (err) {
+                console.warn('资源清单加载失败，使用内置清单:', err);
+                resourceList = RESOURCE_FALLBACK_LIST.slice();
+            }
+            renderResources();
+        }
+
+        function renderResources() {
+            const gallery = document.getElementById('resourceGallery');
+            if (!gallery) return;
+            if (!resourceList.length) {
+                gallery.innerHTML = '<div class="resource-empty">暂无可用资源，请稍后再试。</div>';
+                return;
+            }
+            gallery.innerHTML = resourceList.map(item => {
+                const filename = item.filename || (item.path || '').split('/').pop() || '资源文件';
+                const badge = item.badge || (filename.split('.').pop() || 'FILE').toUpperCase();
+                const tags = Array.isArray(item.tags)
+                    ? item.tags.map(t => '<span class="resource-tag">' + escapeHtml(t) + '</span>').join('')
+                    : '';
+                const size = item.size ? '<span class="resource-size">' + escapeHtml(item.size) + '</span>' : '';
+                const path = normalizeResourcePath(item.path || '');
+                return '<div class="resource-card">'
+                    + '<div class="resource-card-top"><span class="tab-badge ' + escapeHtml(badge) + '">' + escapeHtml(badge) + '</span>' + size + '</div>'
+                    + '<div class="resource-title">' + escapeHtml(item.title || filename) + '</div>'
+                    + '<div class="resource-desc">' + escapeHtml(item.description || '') + '</div>'
+                    + '<div class="resource-file">' + escapeHtml(filename) + '</div>'
+                    + (tags ? '<div class="resource-tags">' + tags + '</div>' : '')
+                    + '<div class="resource-actions"><a class="resource-download-btn" href="' + escapeHtml(path) + '" download data-resource-path="' + escapeHtml(path) + '" data-resource-name="' + escapeHtml(filename) + '" data-resource-repo="' + escapeHtml(item.repoPath || '') + '">📥 一键下载</a></div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        function getResourceRepoPath(path, repoPath) {
+            if (repoPath) return repoPath;
+            const clean = normalizeResourcePath(path);
+            if (clean.indexOf('dist/docs/') === 0 || clean.indexOf('docs/') === 0) return clean;
+            const contentPath = (currentConfig.path || 'dist/docs/content').replace(/\/+$/, '');
+            const base = contentPath.replace(/\/content$/, '');
+            return base + '/' + clean;
+        }
+
+        async function downloadResource(path, filename, triggerBtn, repoPath) {
+            const cleanPath = normalizeResourcePath(path);
+            if (!cleanPath) return;
+            const { owner, repo, branch } = currentConfig;
+            const repoResourcePath = getResourceRepoPath(cleanPath, repoPath);
+            const candidates = [
+                encodeURI(cleanPath),
+                'https://raw.githubusercontent.com/' + owner + '/' + repo + '/' + branch + '/' + repoResourcePath
+            ];
+            const originalHtml = triggerBtn ? triggerBtn.innerHTML : '';
+            if (triggerBtn) {
+                triggerBtn.disabled = true;
+                triggerBtn.innerHTML = '⏳ 正在下载...';
+            }
+
+            let blob = null;
+            for (const url of candidates) {
+                try {
+                    const res = await fetch(url, { cache: 'no-store' });
+                    if (res.ok) {
+                        blob = await res.blob();
+                        break;
+                    }
+                } catch (e) {
+                    console.warn('资源下载尝试失败:', url, e);
+                }
+            }
+
+            if (!blob) {
+                if (triggerBtn) {
+                    triggerBtn.disabled = false;
+                    triggerBtn.innerHTML = '❌ 下载失败，点击重试';
+                    setTimeout(() => { triggerBtn.innerHTML = originalHtml; }, 2500);
+                }
+                return;
+            }
+
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = filename || cleanPath.split('/').pop() || 'resource';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+
+            if (triggerBtn) {
+                triggerBtn.innerHTML = '✔ 已开始下载';
+                setTimeout(() => {
+                    triggerBtn.disabled = false;
+                    triggerBtn.innerHTML = originalHtml;
+                }, 2000);
+            }
+        }
+
+        async function copyPlainText(text, triggerBtn) {
+            if (!text) return;
+            const originalHtml = triggerBtn ? triggerBtn.innerHTML : '';
+            const showCopied = () => {
+                if (!triggerBtn) return;
+                triggerBtn.textContent = '✔ 已复制';
+                setTimeout(() => { triggerBtn.innerHTML = originalHtml; }, 1800);
+            };
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopied();
+            } catch (err) {
+                const helper = document.createElement('textarea');
+                helper.value = text;
+                helper.setAttribute('readonly', '');
+                helper.style.position = 'fixed';
+                helper.style.opacity = '0';
+                document.body.appendChild(helper);
+                helper.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(helper);
+                showCopied();
+            }
+        }
+
+        const resourceGalleryEl = document.getElementById('resourceGallery');
+        if (resourceGalleryEl) {
+            resourceGalleryEl.addEventListener('click', function(event) {
+                const btn = event.target.closest('.resource-download-btn');
+                if (!btn) return;
+                event.preventDefault();
+                downloadResource(
+                    btn.getAttribute('data-resource-path'),
+                    btn.getAttribute('data-resource-name'),
+                    btn,
+                    btn.getAttribute('data-resource-repo')
+                );
+            });
+        }
+
+        const markdownRenderEl = document.getElementById('markdownRenderArea');
+        if (markdownRenderEl) {
+            markdownRenderEl.addEventListener('click', function(event) {
+                const copyBtn = event.target.closest('.code-copy-btn');
+                if (copyBtn) {
+                    event.preventDefault();
+                    const payload = copyBtn.getAttribute('data-copy-code') || '';
+                    let code = payload;
+                    try { code = decodeURIComponent(payload); } catch (e) {}
+                    copyPlainText(code, copyBtn);
+                    return;
+                }
+                const link = event.target.closest('.inline-download-link, .resource-download-btn');
+                if (link) {
+                    event.preventDefault();
+                    downloadResource(
+                        link.getAttribute('data-resource-path'),
+                        link.getAttribute('data-resource-name'),
+                        link,
+                        link.getAttribute('data-resource-repo')
+                    );
+                }
+            });
+        }
+
         // 顶部工具栏一键下载按钮
         document.getElementById('btnDownloadDoc').addEventListener('click', function() {
             const doc = documentsList.find(d => d.id === activeDocId);
@@ -2288,6 +2985,7 @@
 
         // 启动加载
         loadDocuments();
+        loadResources();
     </script>
 </body>
 </html>

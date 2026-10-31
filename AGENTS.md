@@ -26,21 +26,25 @@ minigame-master/
     ├── app.js            # 核心业务逻辑（Canvas 网格背景、时钟、多引擎搜索、书签 CRUD、便签持久化）
     ├── docs/             # 📚 个人文档中心与多格式知识库
     │   ├── index.html    # 文档中心主结构（多选项卡展示、前3行摘要预览、多格式阅读器、GitHub同步）
-    │   └── content/      # 存放各格式文档的指定仓库路径
-    │       ├── manifest.json                  # 文档元数据清单（标题、分类、路径、标签、格式类型）
-    │       ├── 01-welcome-to-docs.md           # 欢迎与使用说明
-    │       ├── 02-zero-build-architecture.md   # Zero-Build 纯静态架构规范
-    │       ├── 03-touch-controller-api.md      # 触屏控制器 API
-    │       ├── 04-color-picker-guide.md        # 独立调色盘与拾色器指南
-    │       ├── 05-game-balance-and-physics.md  # 游戏物理引擎平衡性调优备忘录
-    │       ├── 06-cloudflare-deployment.md     # Cloudflare Pages 自动化部署与域名绑定
-    │       ├── 07-markdown-syntax-reference.md # Markdown 常用语法速查
-    │       ├── 08-project-roadmap.md           # 个人工作台未来路线图
-    │       ├── 09-system-architecture-notes.txt# 纯文本架构与日常运维笔记
-    │       ├── 10-project-specification.docx  # Word 格式工程规范说明书
-    │       ├── 11-game-arcade-matrix.xlsx     # Excel 格式游戏配置与性能参数矩阵
-    │       ├── 12-developer-handbook.pdf      # PDF 格式工程技术手册
-    │       └── 走进科技馆，放飞科技梦.md       # 高中组科技征文（第一人称散文沉淀）
+    │   ├── content/      # 存放各格式文档的指定仓库路径
+    │   │   ├── manifest.json                  # 文档元数据清单（标题、分类、路径、标签、格式类型）
+    │   │   ├── 01-welcome-to-docs.md           # 欢迎与使用说明
+    │   │   ├── 02-zero-build-architecture.md   # Zero-Build 纯静态架构规范
+    │   │   ├── 03-touch-controller-api.md      # 触屏控制器 API
+    │   │   ├── 04-color-picker-guide.md        # 独立调色盘与拾色器指南
+    │   │   ├── 05-game-balance-and-physics.md  # 游戏物理引擎平衡性调优备忘录
+    │   │   ├── 06-cloudflare-deployment.md     # Cloudflare Pages 自动化部署与域名绑定
+    │   │   ├── 07-markdown-syntax-reference.md # Markdown 常用语法速查
+    │   │   ├── 08-project-roadmap.md           # 个人工作台未来路线图
+    │   │   ├── 09-system-architecture-notes.txt# 纯文本架构与日常运维笔记
+    │   │   ├── 10-project-specification.docx  # Word 格式工程规范说明书
+    │   │   ├── 11-game-arcade-matrix.xlsx     # Excel 格式游戏配置与性能参数矩阵
+    │   │   ├── 12-developer-handbook.pdf      # PDF 格式工程技术手册
+    │   │   ├── 13-windows-restore-shortcut-name.md # Windows 一键恢复快捷方式初始名称（脚本全文 + 下载）
+    │   │   └── 走进科技馆，放飞科技梦.md       # 高中组科技征文（第一人称散文沉淀）
+    │   └── resources/    # 文章配套可下载小资源（脚本、清单等）
+    │       ├── manifest.json                  # 资源元数据清单（标题、文件名、大小、路径、标签）
+    │       └── Restore-shortcut-to-its-original-name.cmd # Windows 快捷方式名称恢复脚本
     └── games/            # 独立小游戏合集目录 (共 16 款)
         ├── index.html    # 游戏大厅 (Arcade Lobby - 分类过滤、即时检索、16 款游戏展示)
         ├── shared/       # 公共模块与工具库
@@ -162,6 +166,12 @@ minigame-master/
   - **仓库源通用一键下载引擎 (Universal Repo File Downloader)**：
     - 阅读器顶部工具栏提供醒目的「📥 一键下载文档」按钮，每个选项卡卡片底部亦标配「📥 下载」快捷入口。
     - 统一采用二进制与文本自适应 `Blob / ObjectURL` 机制，针对各格式精准注入 MIME 类型（如 `application/vnd.openxmlformats-officedocument...`、`application/pdf` 等），彻底解决 GitHub Raw 跨域 `download` 属性失效及二进制文件乱码问题。
+  - **文章配套资源中心与一键下载 (Article Resource Center)**：
+    - `dist/docs/resources/` 专门存放文章中引用的小体积可下载资源（如 Windows CMD 脚本），并维护 `manifest.json`（`title` / `filename` / `path` / `repoPath` / `badge` / `size` / `description` / `tags`）。
+    - 文档中心新增「🧰 资源下载」锚点区与「工具」分类，`#resourceGallery` 自动读取资源清单并渲染资源卡片，每个卡片提供「📥 一键下载」。
+    - Markdown 扩展指令 `:::download ... :::` 可在文章内嵌下载卡片；普通 `resources/` 链接自动增强为 `.inline-download-link`，经统一 `downloadResource` 走本地相对路径与 GitHub Raw 双通道 `Blob` 下载。
+    - 代码块自动附加语言标签与「复制代码」按钮，复制内容通过 `data-copy-code` 保留原文，不受 HTML 转义影响。
+    - 新增文章 `13-windows-restore-shortcut-name.md`（《Windows一键恢复快捷方式初始名称》），完整收录 `Restore-shortcut-to-its-original-name.cmd` 422 行源码并提供下载。
 
 ### 3.5 视觉层与交互背景
 - **Canvas 节点交互网络** (`#canvasBackground`)：

@@ -1,0 +1,20 @@
+{
+  "updated": "2026-10-31",
+  "resources": [
+    {
+      "id": "restore-shortcut-name",
+      "title": "Windows 桌面快捷方式名称一键恢复脚本",
+      "filename": "Restore-shortcut-to-its-original-name.cmd",
+      "path": "resources/Restore-shortcut-to-its-original-name.cmd",
+      "repoPath": "dist/docs/resources/Restore-shortcut-to-its-original-name.cmd",
+      "badge": "CMD",
+      "size": "15.9 KB",
+      "description": "扫描当前用户与公共桌面上的 .lnk 快捷方式，结合开始菜单索引、快捷方式描述、程序版本信息与目标文件名，将名称恢复为程序原始显示名；支持预览、冲突重名自动编号与操作日志。",
+      "tags": [
+        "Windows",
+        "快捷方式",
+        "系统脚本"
+      ]
+    }
+  ]
+}

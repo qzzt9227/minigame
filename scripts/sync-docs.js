@@ -80,6 +80,9 @@ function extractDocMeta(filename, filePath) {
     } else if (filename.includes('征文') || filename.includes('科技馆')) {
         category = '征文';
         badge = 'ESSAY';
+    } else if (filename.includes('shortcut') || filename.includes('windows')) {
+        category = '工具';
+        badge = 'TOOL';
     } else if (filename.includes('guide') || filename.includes('welcome') || filename.includes('说明')) {
         category = '指南';
         badge = 'START';

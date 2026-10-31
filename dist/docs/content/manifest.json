@@ -141,5 +141,16 @@
     "date": "2026-10-01",
     "path": "content/12-developer-handbook.pdf",
     "docNo": 13
+  },
+  {
+    "id": "31332d7769",
+    "filename": "13-windows-restore-shortcut-name.md",
+    "title": "Windows一键恢复快捷方式初始名称",
+    "category": "工具",
+    "badge": "TOOL",
+    "type": "markdown",
+    "date": "2026-10-31",
+    "path": "content/13-windows-restore-shortcut-name.md",
+    "docNo": 14
   }
 ]
