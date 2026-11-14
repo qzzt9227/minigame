@@ -8,8 +8,8 @@
       "path": "resources/Restore-shortcut-to-its-original-name.cmd",
       "repoPath": "dist/docs/resources/Restore-shortcut-to-its-original-name.cmd",
       "badge": "CMD",
-      "size": "15.9 KB",
-      "description": "扫描当前用户与公共桌面上的 .lnk 快捷方式，结合开始菜单索引、快捷方式描述、程序版本信息与目标文件名，将名称恢复为程序原始显示名；支持预览、冲突重名自动编号与操作日志。",
+      "size": "17.2 KB",
+      "description": "扫描当前用户与公共桌面上的 .lnk 快捷方式，启动时自动检查并强制加载 StartLayout，再结合开始菜单索引、快捷方式描述、程序版本信息与目标文件名还原名称；支持预览、冲突重名自动编号与操作日志。",
       "tags": [
         "Windows",
         "快捷方式",

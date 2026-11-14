@@ -14,6 +14,7 @@ Windows 桌面上的 `.lnk` 快捷方式，有时会在安装、迁移或批量�
 - **自动避让重名**：目标名称已存在时自动追加 `(2)`、`(3)`，不会覆盖任何现有文件。
 - **失败可追踪**：成功、失败、跳过、未变化分别统计，日志写入 `%TEMP%\DesktopShortcutRename_时间戳.log`。
 - **两种实现可选**：原版批处理 + Windows 自带 PowerShell；新增的 WSF 版只使用 Windows Script Host，不依赖 PowerShell，适合受控或精简系统。
+- **StartLayout 自检**：原版启动时自动检查 `Get-StartApps`，若 StartLayout 尚未加载则强制导入模块，避免开始菜单应用名匹配静默失效。
 - **纯系统组件实现**：两版都不需要安装任何第三方工具，WSF 版只需 Windows 自带的 WSH。
 
 ## 📥 一键下载原版脚本
@@ -21,9 +22,9 @@ Windows 桌面上的 `.lnk` 快捷方式，有时会在安装、迁移或批量�
 :::download
 file=resources/Restore-shortcut-to-its-original-name.cmd
 title=Restore-shortcut-to-its-original-name.cmd
-desc=Windows 10 / 11 桌面快捷方式名称恢复脚本，需以管理员身份运行。
+desc=Windows 10 / 11 桌面快捷方式名称恢复脚本，启动时自动检查 StartLayout，需以管理员身份运行。
 badge=CMD
-size=15.9 KB
+size=17.2 KB
 :::
 
 > 备用入口：[下载 Restore-shortcut-to-its-original-name.cmd](../resources/Restore-shortcut-to-its-original-name.cmd)
@@ -331,6 +332,40 @@ $startRoots = @(
     [Environment]::GetFolderPath('StartMenu')
 ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
 
+function Enable-StartLayoutModule {
+    if (Get-Command -Name Get-StartApps -ErrorAction SilentlyContinue) {
+        return $true
+    }
+
+    $systemModuleRoot = [IO.Path]::Combine($env:SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'Modules')
+    if ((Test-Path -LiteralPath $systemModuleRoot) -and
+        ($env:PSModulePath -notlike "*$systemModuleRoot*")) {
+        $env:PSModulePath = "$systemModuleRoot;$env:PSModulePath"
+    }
+
+    $module = Get-Module -ListAvailable -Name StartLayout -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($null -ne $module -and -not [string]::IsNullOrWhiteSpace($module.Path)) {
+        try {
+            Import-Module -Name $module.Path -Force -ErrorAction Stop
+        } catch { }
+    }
+
+    if (-not (Get-Command -Name Get-StartApps -ErrorAction SilentlyContinue)) {
+        try {
+            Import-Module -Name StartLayout -Force -ErrorAction Stop
+        } catch { }
+    }
+
+    return [bool](Get-Command -Name Get-StartApps -ErrorAction SilentlyContinue)
+}
+
+Write-Host ''
+Write-Host '[检查] StartLayout 模块...' -ForegroundColor DarkGray
+if (-not (Enable-StartLayoutModule)) {
+    Write-Host '[警告] StartLayout 模块不可用，跳过开始菜单应用名匹配，继续使用其他策略。' -ForegroundColor Yellow
+}
+
 $startAppNames = @{}
 try {
     foreach ($app in (Get-StartApps -ErrorAction Stop)) {
@@ -501,12 +536,28 @@ try { [void](Read-Host) } catch { }
 | `fltmc.exe` | 检测当前窗口是否具有管理员权限 | Windows 自带 |
 | `powershell.exe` | 执行全部核心逻辑：扫描、推断、预览、重命名、写日志 | Windows 10 / 11 自带 Windows PowerShell 5.1 |
 | `WScript.Shell` COM | 通过 `CreateShortcut` 读取和写入 `.lnk` 文件 | Windows 自带 |
-| `Get-StartApps` | 枚举开始菜单应用，把 `shell:AppsFolder` 的 AppID 映射为应用显示名 | 依赖 StartLayout 模块，主要在 Windows 10 / 11 可用 |
+| `Get-StartApps` | 枚举开始菜单应用，把 `shell:AppsFolder` 的 AppID 映射为应用显示名 | StartLayout 模块；脚本启动时会自动检查并强制加载 |
 | `System.Diagnostics.FileVersionInfo` | 读取目标程序的 `FileDescription` 版本信息 | .NET，由 PowerShell 提供 |
 | `Get-ChildItem` / `Rename-Item` | 递归扫描开始菜单、重命名桌面快捷方式 | PowerShell 内置命令 |
 | `%TEMP%` | 写入本次操作日志 | Windows 自带 |
 
 因此，原版虽然**不需要安装任何第三方软件**，但仍依赖 PowerShell 5.1、.NET 与 StartLayout 模块。在 PowerShell 被 AppLocker / ExecutionPolicy 限制、`Get-StartApps` 不可用，或者系统被精简过的环境里，它可能无法完整工作。
+
+> 启动自检：脚本会在扫描开始前检查 `Get-StartApps` 是否存在；如果 StartLayout 尚未加载，会先把系统模块目录加入 `PSModulePath`，再执行 `Import-Module StartLayout -Force`。若模块确实被系统精简，会输出黄色警告并跳过应用名匹配，继续使用开始菜单、描述、版本信息与目标文件名等策略，不会直接中断。
+
+### StartLayout 自检与强制启用
+
+原版脚本不要求你手动打开 PowerShell。它在主流程开始前执行等价的检查：
+
+```powershell
+if (-not (Get-Command Get-StartApps -ErrorAction SilentlyContinue)) {
+    $root = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\Modules'
+    if ($env:PSModulePath -notlike "*$root*") { $env:PSModulePath = "$root;$env:PSModulePath" }
+    Import-Module StartLayout -Force -ErrorAction Stop
+}
+```
+
+注意：StartLayout 是 Windows PowerShell 自带模块，不是「Windows 可选功能」，因此没有对应的 `Enable-WindowsOptionalFeature` 功能名；这里所说的“启用”就是把模块目录加入搜索路径并强制导入，且只影响当前 PowerShell 进程，不会修改系统全局配置。WSF 版不调用 PowerShell，也不使用 `Get-StartApps`，所以不需要这一步。
 
 ## 🪶 纯 Windows 零依赖版（WSF）
 

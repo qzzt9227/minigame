@@ -262,6 +262,40 @@ $startRoots = @(
     [Environment]::GetFolderPath('StartMenu')
 ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
 
+function Enable-StartLayoutModule {
+    if (Get-Command -Name Get-StartApps -ErrorAction SilentlyContinue) {
+        return $true
+    }
+
+    $systemModuleRoot = [IO.Path]::Combine($env:SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'Modules')
+    if ((Test-Path -LiteralPath $systemModuleRoot) -and
+        ($env:PSModulePath -notlike "*$systemModuleRoot*")) {
+        $env:PSModulePath = "$systemModuleRoot;$env:PSModulePath"
+    }
+
+    $module = Get-Module -ListAvailable -Name StartLayout -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($null -ne $module -and -not [string]::IsNullOrWhiteSpace($module.Path)) {
+        try {
+            Import-Module -Name $module.Path -Force -ErrorAction Stop
+        } catch { }
+    }
+
+    if (-not (Get-Command -Name Get-StartApps -ErrorAction SilentlyContinue)) {
+        try {
+            Import-Module -Name StartLayout -Force -ErrorAction Stop
+        } catch { }
+    }
+
+    return [bool](Get-Command -Name Get-StartApps -ErrorAction SilentlyContinue)
+}
+
+Write-Host ''
+Write-Host '[检查] StartLayout 模块...' -ForegroundColor DarkGray
+if (-not (Enable-StartLayoutModule)) {
+    Write-Host '[警告] StartLayout 模块不可用，跳过开始菜单应用名匹配，继续使用其他策略。' -ForegroundColor Yellow
+}
+
 $startAppNames = @{}
 try {
     foreach ($app in (Get-StartApps -ErrorAction Stop)) {
