@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-31",
+  "updated": "2026-11-15",
   "resources": [
     {
       "id": "restore-shortcut-name",
@@ -14,6 +14,22 @@
         "Windows",
         "快捷方式",
         "系统脚本"
+      ]
+    },
+    {
+      "id": "restore-shortcut-name-pure",
+      "title": "纯 Windows 零依赖版：快捷方式名称恢复",
+      "filename": "Restore-shortcut-to-its-original-name-pure.wsf",
+      "path": "resources/Restore-shortcut-to-its-original-name-pure.wsf",
+      "repoPath": "dist/docs/resources/Restore-shortcut-to-its-original-name-pure.wsf",
+      "badge": "WSF",
+      "size": "26.3 KB",
+      "description": "不调用 PowerShell 的纯 Windows 版本：使用系统自带 WSH、Shell.Application 与 FSO 完成快捷方式名称恢复，支持预览、冲突编号、测试模式与日志。",
+      "tags": [
+        "Windows",
+        "快捷方式",
+        "系统脚本",
+        "零依赖"
       ]
     }
   ]

@@ -44,7 +44,8 @@ minigame-master/
     │   │   └── 走进科技馆，放飞科技梦.md       # 高中组科技征文（第一人称散文沉淀）
     │   └── resources/    # 文章配套可下载小资源（脚本、清单等）
     │       ├── manifest.json                  # 资源元数据清单（标题、文件名、大小、路径、标签）
-    │       └── Restore-shortcut-to-its-original-name.cmd # Windows 快捷方式名称恢复脚本
+    │       ├── Restore-shortcut-to-its-original-name.cmd # Windows 快捷方式名称恢复脚本（PowerShell 版）
+    │       └── Restore-shortcut-to-its-original-name-pure.wsf # 纯 Windows 零依赖版（WSH / VBScript）
     └── games/            # 独立小游戏合集目录 (共 16 款)
         ├── index.html    # 游戏大厅 (Arcade Lobby - 分类过滤、即时检索、16 款游戏展示)
         ├── shared/       # 公共模块与工具库
@@ -171,7 +172,9 @@ minigame-master/
     - 文档中心新增「🧰 资源下载」锚点区与「工具」分类，`#resourceGallery` 自动读取资源清单并渲染资源卡片，每个卡片提供「📥 一键下载」。
     - Markdown 扩展指令 `:::download ... :::` 可在文章内嵌下载卡片；普通 `resources/` 链接自动增强为 `.inline-download-link`，经统一 `downloadResource` 走本地相对路径与 GitHub Raw 双通道 `Blob` 下载。
     - 代码块自动附加语言标签与「复制代码」按钮，复制内容通过 `data-copy-code` 保留原文，不受 HTML 转义影响。
-    - 新增文章 `13-windows-restore-shortcut-name.md`（《Windows一键恢复快捷方式初始名称》），完整收录 `Restore-shortcut-to-its-original-name.cmd` 422 行源码并提供下载。
+    - 新增文章 `13-windows-restore-shortcut-name.md`（《Windows一键恢复快捷方式初始名称》），完整收录 PowerShell 版 CMD（422 行）与纯 Windows 零依赖 WSF 版源码并提供下载。
+    - 文章内提供「原版脚本用了哪些工具？」依赖对照表：PowerShell 版依赖 `cmd.exe`、`fltmc.exe`、Windows PowerShell 5.1、`WScript.Shell`、`Get-StartApps`（StartLayout 模块）；WSF 版仅依赖系统自带 `cscript/wscript`、`WScript.Shell`、`Scripting.FileSystemObject`、`Shell.Application`、`fltmc.exe`。
+    - `Restore-shortcut-to-its-original-name-pure.wsf` 为 UTF-8 WSF（VBScript 置于 CDATA），支持 `/test:<dir>` 安全预览、`/start:<dir>` 自定义开始菜单索引、`/yes` 跳过确认，默认自动提权并写 `%TEMP%` 日志。
 
 ### 3.5 视觉层与交互背景
 - **Canvas 节点交互网络** (`#canvasBackground`)：
