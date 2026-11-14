@@ -14,6 +14,7 @@ Windows 桌面上的 `.lnk` 快捷方式，有时会在安装、迁移或批量�
 - **自动避让重名**：目标名称已存在时自动追加 `(2)`、`(3)`，不会覆盖任何现有文件。
 - **失败可追踪**：成功、失败、跳过、未变化分别统计，日志写入 `%TEMP%\DesktopShortcutRename_时间戳.log`。
 - **两种实现可选**：原版批处理 + Windows 自带 PowerShell；新增的 WSF 版只使用 Windows Script Host，不依赖 PowerShell，适合受控或精简系统。
+- **PowerShell 版本自检**：启动时读取 `$PSVersionTable`，显示 PowerShell 版本、PSEdition 与 CLR 版本，并判断是否达到 5.1。
 - **StartLayout 自检**：原版启动时自动检查 `Get-StartApps`，若 StartLayout 尚未加载则强制导入模块，避免开始菜单应用名匹配静默失效。
 - **纯系统组件实现**：两版都不需要安装任何第三方工具，WSF 版只需 Windows 自带的 WSH。
 
@@ -22,9 +23,9 @@ Windows 桌面上的 `.lnk` 快捷方式，有时会在安装、迁移或批量�
 :::download
 file=resources/Restore-shortcut-to-its-original-name.cmd
 title=Restore-shortcut-to-its-original-name.cmd
-desc=Windows 10 / 11 桌面快捷方式名称恢复脚本，启动时自动检查 StartLayout，需以管理员身份运行。
+desc=Windows 10 / 11 桌面快捷方式名称恢复脚本，启动时显示 PowerShell 版本并自动检查 StartLayout，需以管理员身份运行。
 badge=CMD
-size=17.2 KB
+size=17.9 KB
 :::
 
 > 备用入口：[下载 Restore-shortcut-to-its-original-name.cmd](../resources/Restore-shortcut-to-its-original-name.cmd)
@@ -361,6 +362,22 @@ function Enable-StartLayoutModule {
 }
 
 Write-Host ''
+$psVersion = $PSVersionTable.PSVersion
+$psEditionName = 'Desktop'
+if ($PSVersionTable.ContainsKey('PSEdition')) {
+    $psEditionName = [string]$PSVersionTable.PSEdition
+}
+$psDetails = '{0}（{1}）' -f $psVersion, $psEditionName
+if ($PSVersionTable.ContainsKey('CLRVersion')) {
+    $psDetails += ' / CLR ' + $PSVersionTable.CLRVersion
+}
+Write-Host ('[检查] PowerShell 版本：' + $psDetails) -ForegroundColor DarkGray
+if (($psVersion.Major -lt 5) -or (($psVersion.Major -eq 5) -and ($psVersion.Minor -lt 1))) {
+    Write-Host '[警告] 当前 PowerShell 低于 5.1，建议升级后再运行。' -ForegroundColor Yellow
+} else {
+    Write-Host '[检查] PowerShell 版本满足脚本要求。' -ForegroundColor DarkGray
+}
+
 Write-Host '[检查] StartLayout 模块...' -ForegroundColor DarkGray
 if (-not (Enable-StartLayoutModule)) {
     Write-Host '[警告] StartLayout 模块不可用，跳过开始菜单应用名匹配，继续使用其他策略。' -ForegroundColor Yellow
@@ -409,6 +426,7 @@ Write-Title '桌面快捷方式原始名称恢复'
 Write-Host ('桌面目录：' + ($desktopDirs -join '  |  '))
 Write-Host ('找到快捷方式：{0} 个' -f $items.Count)
 Add-Log ('时间：' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
+Add-Log ('PowerShell：' + $psDetails)
 Add-Log ('桌面目录：' + ($desktopDirs -join ' | '))
 
 $existing = @{}
@@ -544,6 +562,24 @@ try { [void](Read-Host) } catch { }
 因此，原版虽然**不需要安装任何第三方软件**，但仍依赖 PowerShell 5.1、.NET 与 StartLayout 模块。在 PowerShell 被 AppLocker / ExecutionPolicy 限制、`Get-StartApps` 不可用，或者系统被精简过的环境里，它可能无法完整工作。
 
 > 启动自检：脚本会在扫描开始前检查 `Get-StartApps` 是否存在；如果 StartLayout 尚未加载，会先把系统模块目录加入 `PSModulePath`，再执行 `Import-Module StartLayout -Force`。若模块确实被系统精简，会输出黄色警告并跳过应用名匹配，继续使用开始菜单、描述、版本信息与目标文件名等策略，不会直接中断。
+
+### PowerShell 版本自检
+
+脚本在扫描前读取 `$PSVersionTable`，显示 PowerShell 版本、PSEdition 与 CLR 版本，并判断是否达到 5.1：
+
+```powershell
+$psVersion = $PSVersionTable.PSVersion
+$psEditionName = 'Desktop'
+if ($PSVersionTable.ContainsKey('PSEdition')) { $psEditionName = [string]$PSVersionTable.PSEdition }
+$psDetails = '{0}（{1}）' -f $psVersion, $psEditionName
+if ($PSVersionTable.ContainsKey('CLRVersion')) { $psDetails += ' / CLR ' + $PSVersionTable.CLRVersion }
+Write-Host ('[检查] PowerShell 版本：' + $psDetails)
+if (($psVersion.Major -lt 5) -or (($psVersion.Major -eq 5) -and ($psVersion.Minor -lt 1))) {
+    Write-Host '[警告] 当前 PowerShell 低于 5.1，建议升级后再运行。' -ForegroundColor Yellow
+}
+```
+
+版本信息只用于展示和告警，不会自动升级 PowerShell；同一份版本信息也会写入操作日志。注意变量名使用 `$psEditionName` 而不是 `$psEdition`，避免与 PowerShell 只读自动变量 `$PSEdition` 冲突。
 
 ### StartLayout 自检与强制启用
 

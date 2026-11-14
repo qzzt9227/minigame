@@ -291,6 +291,22 @@ function Enable-StartLayoutModule {
 }
 
 Write-Host ''
+$psVersion = $PSVersionTable.PSVersion
+$psEditionName = 'Desktop'
+if ($PSVersionTable.ContainsKey('PSEdition')) {
+    $psEditionName = [string]$PSVersionTable.PSEdition
+}
+$psDetails = '{0}（{1}）' -f $psVersion, $psEditionName
+if ($PSVersionTable.ContainsKey('CLRVersion')) {
+    $psDetails += ' / CLR ' + $PSVersionTable.CLRVersion
+}
+Write-Host ('[检查] PowerShell 版本：' + $psDetails) -ForegroundColor DarkGray
+if (($psVersion.Major -lt 5) -or (($psVersion.Major -eq 5) -and ($psVersion.Minor -lt 1))) {
+    Write-Host '[警告] 当前 PowerShell 低于 5.1，建议升级后再运行。' -ForegroundColor Yellow
+} else {
+    Write-Host '[检查] PowerShell 版本满足脚本要求。' -ForegroundColor DarkGray
+}
+
 Write-Host '[检查] StartLayout 模块...' -ForegroundColor DarkGray
 if (-not (Enable-StartLayoutModule)) {
     Write-Host '[警告] StartLayout 模块不可用，跳过开始菜单应用名匹配，继续使用其他策略。' -ForegroundColor Yellow
@@ -339,6 +355,7 @@ Write-Title '桌面快捷方式原始名称恢复'
 Write-Host ('桌面目录：' + ($desktopDirs -join '  |  '))
 Write-Host ('找到快捷方式：{0} 个' -f $items.Count)
 Add-Log ('时间：' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
+Add-Log ('PowerShell：' + $psDetails)
 Add-Log ('桌面目录：' + ($desktopDirs -join ' | '))
 
 $existing = @{}
